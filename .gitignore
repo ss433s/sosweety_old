@@ -1,0 +1,10 @@
+__pycache__
+.idea
+*.json
+*.p
+*.res
+corpus/
+model/
+data/
+!.vscode/launch.json
+!.vscode/settings.json
