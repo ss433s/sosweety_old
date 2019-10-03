@@ -7,4 +7,3 @@ corpus/
 model/
 data/
 !.vscode/launch.json
-!.vscode/settings.json
