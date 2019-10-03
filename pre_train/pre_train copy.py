@@ -1,6 +1,7 @@
 # import jieba
 import re, json, argparse
 from utils import tuple_in_tuple
+from pyhanlp import HanLP
 # from stanfordcorenlp import StanfordCoreNLP
 # nlp = StanfordCoreNLP(r'/mnt/e/ubuntu/stanford-corenlp-full-2018-10-05/',lang='zh')
 
@@ -11,6 +12,49 @@ parser.add_argument("-c",
                     help="corpus file folder for training",
                     required=False)
 args = parser.parse_args()
+
+
+###################
+# 分句
+# to do 引号破折号等，引号纠错
+###################
+def seg2sentence(paragraph):
+    sentences = re.split('(。|！|\!|\.|？|\?)', paragraph)
+    new_sents = []
+    for i in range(int(len(sentences)/2)):
+        if 2*i + 1 < len(sentences):
+            sent = sentences[2*i] + sentences[2*i+1]
+        else:
+            sent = sentences[2*i]
+        new_sents.append(sent)
+    return new_sents
+
+
+def cut_sent(para):
+    para = re.sub('([。！？\?])([^”’])', r"\1\n\2", para)  # 单字符断句符
+    para = re.sub('(\.{6})([^”’])', r"\1\n\2", para)  # 英文省略号
+    para = re.sub('(\…{2})([^”’])', r"\1\n\2", para)  # 中文省略号
+    para = re.sub('([。！？\?][”’])([^，。！？\?])', r'\1\n\2', para)
+    # 如果双引号前有终止符，那么双引号才是句子的终点，把分句符\n放到双引号后，注意前面的几句都小心保留了双引号
+    para = para.rstrip()  # 段尾如果有多余的\n就去掉它
+    # 很多规则中会考虑分号;，但是这里我把它忽略不计，破折号、英文双引号等同样忽略，需要的再做些简单调整即可。
+    return para.split("\n")
+
+
+###################
+# 拆分子句
+# to do 引号破折号等，引号纠错
+###################
+def seg2sub_sentence(sentence):
+    sub_sentences = re.split('(，|,|;|；)', sentence)
+    new_sub_sents = []
+    for i in range(int(len(sub_sentences)/2)+1):
+        if 2*i + 1 < len(sub_sentences):
+            sub_sent = sub_sentences[2*i] + sub_sentences[2*i+1]
+        else:
+            sub_sent = sub_sentences[2*i]
+        new_sub_sents.append(sub_sent)
+    return new_sub_sents
 
 
 ###################
@@ -52,10 +96,16 @@ except Exception:
 line = corpus.readline()
 while line:
     line = line.strip()
+    # sentences = seg2sentence(line)
+    sentences = cut_sent(line)
+    # CRFnewSegment_new = HanLP.newSegment("crf")
+    # s = CRFnewSegment_new.seg2sentence(line)
     print(line)
+    print(sentences)
+    for sentence in sentences:
+        sub_sentences = seg2sub_sentence(sentence)
+        print(sub_sentences)
     line = corpus.readline()
-
-
 corpus.close()
 
 
