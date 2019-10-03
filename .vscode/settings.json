@@ -1,8 +1,0 @@
-{
-    "python.pythonPath": "/home/guoyu/.conda/envs/ss/bin/python",
-    "python.linting.flake8Args": ["--max-line-length=1280", "--extend-ignore=W605, E401"],
-    "python.linting.flake8Enabled": true,
-    "python.formatting.provider": "yapf",
-    "python.linting.pylintEnabled": false,
-    "python.linting.enabled": true
-}
