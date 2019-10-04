@@ -1,7 +1,13 @@
 # import jieba
 import re, json, argparse
-from utils import tuple_in_tuple
 from pyhanlp import HanLP
+import sys
+sys.path.append("..")
+from sub_sentence import ahaha as ahaha
+from utils import tuple_in_tuple
+
+ahaha()
+
 # from stanfordcorenlp import StanfordCoreNLP
 # nlp = StanfordCoreNLP(r'/mnt/e/ubuntu/stanford-corenlp-full-2018-10-05/',lang='zh')
 
@@ -82,6 +88,13 @@ def spo_check():
 # Parataxis
 ###################
 def parataxis_finder():
+    return
+
+
+###################
+# 处理分句
+###################
+def check_sub_sentence(sub_sentence):
     return
 
 
