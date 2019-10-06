@@ -1,5 +1,7 @@
 # import jieba
 import re, json, argparse
+import jieba
+import jieba.posseg
 from pyhanlp import HanLP
 import sys
 sys.path.append("..")
@@ -64,23 +66,39 @@ def seg2sub_sentence(sentence):
 
 
 ###################
-# 重分词
+# re_parse
 ###################
-def re_cut_word():
+def re_parse(parse_result):
+    re_parse_results = []
+    return re_parse_results
+
+
+###################
+# check_parse_result
+###################
+def check_parse_result(parse_result):
+    if meaningful_check(parse_result):
+        return True
+    else:
+        xps_results = check_xps(parse_result)
+        for xps_result in xps_results:
+            meaningful_check(xps_result)
+        return
+
+
+###################
+# 词组检测
+# 返回所有词组组合
+###################
+def check_xps():
     return
 
 
 ###################
-# 词组识别
+# meaningful_check
+# 返回true or false
 ###################
-def xps_finder():
-    return
-
-
-###################
-# spo_check
-###################
-def spo_check():
+def meaningful_check():
     return
 
 
@@ -92,10 +110,44 @@ def parataxis_finder():
 
 
 ###################
-# 处理分句
+# check_sub_sentence
 ###################
-def check_sub_sentence(sub_sentence):
+def check_sub_sentence(parse_result):
+    check_parse_result(parse_result)
+    if not check_parse_result():
+        re_parse_results = re_parse()
+        for re_parse_result in re_parse_results:
+            check_parse_result(re_parse_result)
     return
+
+
+###################
+# hanlp parse
+###################
+def hanlp_parse(text):
+    parse_result = HanLP.parseDependency(text)
+    words = []
+    pos_tags = []
+    for i in parse_result.word:
+        # print(dir(i))
+        words.append(i.LEMMA)
+        pos_tags.append(i.CPOSTAG)
+    clean_text = "".join(words)
+    return words, pos_tags, clean_text
+
+
+###################
+# jieba parse
+###################
+def jieba_parse(text):
+    parse_result = jieba.posseg.cut(text)
+    words = []
+    pos_tags = []
+    for word, flag in parse_result:
+        words.append(word)
+        pos_tags.append(flag)
+    clean_text = "".join(words)
+    return words, pos_tags, clean_text
 
 
 ###################
@@ -113,8 +165,11 @@ while line:
     sentences = cut_sent(line)
     # CRFnewSegment_new = HanLP.newSegment("crf")
     # s = CRFnewSegment_new.seg2sentence(line)
-    print(line)
-    print(sentences)
+    # print(line)
+    # print(sentences)
+    words, pos_tags, clean_text = jieba_parse(line)
+    print(words, pos_tags, clean_text)
+    break
     for sentence in sentences:
         sub_sentences = seg2sub_sentence(sentence)
         print(sub_sentences)
