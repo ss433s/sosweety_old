@@ -90,7 +90,57 @@ def check_parse_result(parse_result):
 # 词组检测
 # 返回所有词组组合
 ###################
-def check_xps():
+class XPattern(object):
+    def __init__(self, tag, freq, meaning):
+        self.tag = tag
+        self.freq = freq
+        self.meaning = meaning
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        s += "tag: %s" % (self.tag)
+        s += ", freq: %s" % (self.freq)
+        s += ", meaning: %s" % (self.meaning)
+        return s
+
+
+class Parse_result(object):
+    def __init__(self, words, pos_tags, parse_str):
+        self.words = words
+        self.pos_tags = pos_tags
+        self.parse_str = parse_str
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        s += "words: %s" % (self.words)
+        s += ", pos_tags: %s" % (self.pos_tags)
+        s += ", parse_str: %s" % (self.parse_str)
+        return s
+
+
+def check_xps(parse_result):
+    def check_nps():
+        nps = {}
+        with open('datasets/np_pattern') as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line.strip().split('\t')
+                patterns = []
+                for i in range(int(len(line)/2)):
+                    pattern = XPattern(line[0], line[i*2+1], line[i*2+2])
+                    patterns.append(pattern)
+                nps[line[0]] = patterns
+            print(nps)
+        # for tag in nps:
+        #     if tag in parse_result.parse_str:
+                
+    check_nps()
     return
 
 
@@ -125,6 +175,12 @@ def check_sub_sentence(parse_result):
 # hanlp parse
 ###################
 def hanlp_parse(text):
+    ha2stanford_dict = {}
+    with open('datasets/ha2stanford') as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.strip().split('\t')
+            ha2stanford_dict[line[0]] = line[1]
     parse_result = HanLP.parseDependency(text)
     words = []
     pos_tags = []
@@ -133,7 +189,16 @@ def hanlp_parse(text):
         words.append(i.LEMMA)
         pos_tags.append(i.CPOSTAG)
     clean_text = "".join(words)
-    return words, pos_tags, clean_text
+    parse_str = "|".join(pos_tags)
+    stanford_pos = []
+    for i in pos_tags:
+        if i in ha2stanford_dict:
+            stanford_pos.append(ha2stanford_dict[i])
+        else:
+            stanford_pos = []
+            break
+    parse_result = Parse_result(words, pos_tags, parse_str)
+    return parse_result, clean_text, stanford_pos
 
 
 ###################
@@ -167,8 +232,9 @@ while line:
     # s = CRFnewSegment_new.seg2sentence(line)
     # print(line)
     # print(sentences)
-    words, pos_tags, clean_text = jieba_parse(line)
-    print(words, pos_tags, clean_text)
+    parse_result, clean_text, stanford_pos = hanlp_parse(line)
+    print(parse_result, clean_text, stanford_pos)
+    check_xps(parse_result)
     break
     for sentence in sentences:
         sub_sentences = seg2sub_sentence(sentence)
