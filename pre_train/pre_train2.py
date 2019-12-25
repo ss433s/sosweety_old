@@ -139,7 +139,7 @@ def check_xps(parse_result):
             print(nps)
         # for tag in nps:
         #     if tag in parse_result.parse_str:
-                
+
     check_nps()
     return
 
