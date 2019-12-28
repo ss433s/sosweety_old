@@ -8,19 +8,53 @@ sys.path.append("..")
 from sub_sentence import ahaha as ahaha
 from utils import tuple_in_tuple
 
-ahaha()
 
-# from stanfordcorenlp import StanfordCoreNLP
-# nlp = StanfordCoreNLP(r'/mnt/e/ubuntu/stanford-corenlp-full-2018-10-05/',lang='zh')
+# ###########################各种类######################
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-c",
-                    "--corpus",
-                    default="./data/train.txt",
-                    help="corpus file folder for training",
-                    required=False)
-args = parser.parse_args()
+# parse result类
+class Parse_result(object):
+    def __init__(self, words, pos_tags):
+        self.words = words
+        self.pos_tags = pos_tags
+        self.parse_str = "|".join(self.pos_tags)
 
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        s += "words: %s" % (self.words)
+        s += ", pos_tags: %s" % (self.pos_tags)
+        # s += ", parse_str: %s" % (self.parse_str)
+        return s
+
+
+# XPS类 不同类型短语类
+class XPattern(object):
+    def __init__(self, xps_type, pos_str, freq, core_word_index, meaning):
+        self.type = xps_type
+        self.core_word_index = core_word_index
+        self.pos_str = pos_str
+        self.freq = freq
+        self.meaning = meaning
+
+    def concrete(self, words, pos_tags):
+        self.words = words
+        self.pos_tags = pos_tags
+        self.core_word = self.words[self.core_word_index]
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        s += "tag: %s" % (self.tag)
+        s += ", freq: %s" % (self.freq)
+        s += ", meaning: %s" % (self.meaning)
+        return s
+
+
+# ###########################各种函数######################
 
 ###################
 # 分句
@@ -66,7 +100,7 @@ def seg2sub_sentence(sentence):
 
 
 ###################
-# re_parse
+# re_parse 重分词
 ###################
 def re_parse(parse_result):
     re_parse_results = []
@@ -90,40 +124,6 @@ def check_parse_result(parse_result):
 # 词组检测
 # 返回所有词组组合
 ###################
-class XPattern(object):
-    def __init__(self, tag, freq, meaning):
-        self.tag = tag
-        self.freq = freq
-        self.meaning = meaning
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        s = ""
-        s += "tag: %s" % (self.tag)
-        s += ", freq: %s" % (self.freq)
-        s += ", meaning: %s" % (self.meaning)
-        return s
-
-
-class Parse_result(object):
-    def __init__(self, words, pos_tags, parse_str):
-        self.words = words
-        self.pos_tags = pos_tags
-        self.parse_str = parse_str
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        s = ""
-        s += "words: %s" % (self.words)
-        s += ", pos_tags: %s" % (self.pos_tags)
-        s += ", parse_str: %s" % (self.parse_str)
-        return s
-
-
 def check_xps(parse_result):
     def check_nps():
         nps = {}
@@ -197,7 +197,7 @@ def hanlp_parse(text):
         else:
             stanford_pos = []
             break
-    parse_result = Parse_result(words, pos_tags, parse_str)
+    parse_result = Parse_result(words, pos_tags)
     return parse_result, clean_text, stanford_pos
 
 
@@ -215,6 +215,21 @@ def jieba_parse(text):
     return words, pos_tags, clean_text
 
 
+# ################################主程序###################
+
+ahaha()
+
+# from stanfordcorenlp import StanfordCoreNLP
+# nlp = StanfordCoreNLP(r'/mnt/e/ubuntu/stanford-corenlp-full-2018-10-05/',lang='zh')
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-c",
+                    "--corpus",
+                    default="./data/train.txt",
+                    help="corpus file folder for training",
+                    required=False)
+args = parser.parse_args()
+
 ###################
 # 读取待处理语料，格式为每行一个数据，每个数据可以是多句话组成
 ###################
@@ -223,26 +238,61 @@ try:
 except Exception:
     corpus = open(args.corpus, 'r', encoding='gbk')
 
+###################
+# 读取短语库和句式库
+###################
+with open('./datasets/np_pattern') as np_file:
+    phrase_patterns = []
+    lines = np_file.readlines()
+    del(lines[0])
+    for line in lines:
+        line = line.strip().split()
+        phrase_pattern = XPattern(line[0], line[1], line[2], line[3], line[4])
+        phrase_patterns.append(phrase_pattern)
+
+
 line = corpus.readline()
 while line:
     line = line.strip()
+
+    # 语料分句
     # sentences = seg2sentence(line)
     sentences = cut_sent(line)
     # CRFnewSegment_new = HanLP.newSegment("crf")
     # s = CRFnewSegment_new.seg2sentence(line)
     # print(line)
     # print(sentences)
-    parse_result, clean_text, stanford_pos = hanlp_parse(line)
-    print(parse_result, clean_text, stanford_pos)
-    check_xps(parse_result)
-    break
+
+    # 对句子进行parse
+    # parse_result, clean_text, stanford_pos = hanlp_parse(line)
+    # print(parse_result, clean_text, stanford_pos)
+    # check_xps(parse_result)
+
+    # 拆分子句
     for sentence in sentences:
         sub_sentences = seg2sub_sentence(sentence)
+
+        # parse
         print(sub_sentences)
+        parse_result, clean_text, stanford_pos = hanlp_parse(line)
+        print(parse_result, clean_text, stanford_pos)
+        stanford_parse_str = "|".join(stanford_pos)
+
+        # 查看是否在ss_pattern中
+        
+        check_xps(parse_result)
+        break
+    break
     line = corpus.readline()
 corpus.close()
 
 
+
+
+
+
+
+# ##################################
 ###################
 # 读取处理好的Stanford语法分析和依存分析结果
 ###################

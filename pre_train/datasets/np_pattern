@@ -1,2 +1,3 @@
-NP	49034	0
-NP|NP	40000	0:amod:1	10000	1:amod:0
+# type pos_tag frep core_word meaning
+NP  NN	49034	0   -
+NP  NN|NN	40000	0   0:amod:1	10000	1:amod:0
