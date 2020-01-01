@@ -13,9 +13,10 @@ from utils import tuple_in_tuple
 
 # parse result类
 class Parse_result(object):
-    def __init__(self, words, pos_tags):
-        self.words = words
-        self.pos_tags = pos_tags
+    def __init__(self, content):
+        self.content = content
+        self.pos_tags = [i.pos_tag for i in self.content]
+        self.words = [i.value for i in self.content]
         self.parse_str = "|".join(self.pos_tags)
 
     def __str__(self):
@@ -29,10 +30,30 @@ class Parse_result(object):
         return s
 
 
-# XPS类 不同类型短语类
-class XPattern(object):
-    def __init__(self, xps_type, pos_str, freq, core_word_index, meaning):
-        self.type = xps_type
+# 单词类 value为字面， pos_tag为词性
+class Word(object):
+    def __init__(self, value, pos_tag, pos_tag2=None):
+        self.value = value
+        self.pos_tag = pos_tag
+        if pos_tag2:
+            self.pos_tag2 = pos_tag2
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        s += "word: %s" % (self.value)
+        s += ", pos_tag: %s" % (self.pos_tag)
+        # s += ", parse_str: %s" % (self.parse_str)
+        return s
+
+
+# Phrase类 不同类型短语类
+class Phrase(object):
+    def __init__(self, phrase_type, pos_str, freq, core_word_index, meaning):
+        self.phrase_type = phrase_type
+        self.pos_tag = self.phrase_type
         self.core_word_index = core_word_index
         self.pos_str = pos_str
         self.freq = freq
@@ -42,6 +63,7 @@ class XPattern(object):
         self.words = words
         self.pos_tags = pos_tags
         self.core_word = self.words[self.core_word_index]
+        self.value = "".join(self.words)
 
     def __str__(self):
         return self.__repr__()
@@ -52,6 +74,13 @@ class XPattern(object):
         s += ", freq: %s" % (self.freq)
         s += ", meaning: %s" % (self.meaning)
         return s
+
+
+# sub sentence类 可以是句子中的一部分
+class Sub_sentence(object):
+    def __init__(self, parse_str, freq):
+        self.parse_str = parse_str
+        self.freq = freq
 
 
 # ###########################各种函数######################
@@ -133,7 +162,7 @@ def check_xps(parse_result):
                 line = line.strip().split('\t')
                 patterns = []
                 for i in range(int(len(line)/2)):
-                    pattern = XPattern(line[0], line[i*2+1], line[i*2+2])
+                    pattern = Phrase(line[0], line[i*2+1], line[i*2+2])
                     patterns.append(pattern)
                 nps[line[0]] = patterns
             print(nps)
@@ -162,12 +191,13 @@ def parataxis_finder():
 ###################
 # check_sub_sentence
 ###################
-def check_sub_sentence(parse_result):
-    check_parse_result(parse_result)
-    if not check_parse_result():
-        re_parse_results = re_parse()
-        for re_parse_result in re_parse_results:
-            check_parse_result(re_parse_result)
+def check_ss_pattern(parse_result):
+    result = False
+    for ss_pattern in ss_patterns:
+        if parse_result.parse_str == ss_pattern.parse_str:
+            result = True
+            continue
+
     return
 
 
@@ -181,24 +211,13 @@ def hanlp_parse(text):
         for line in lines:
             line = line.strip().split('\t')
             ha2stanford_dict[line[0]] = line[1]
-    parse_result = HanLP.parseDependency(text)
+    ha_parse_result = HanLP.parseDependency(text)
     words = []
-    pos_tags = []
-    for i in parse_result.word:
-        # print(dir(i))
-        words.append(i.LEMMA)
-        pos_tags.append(i.CPOSTAG)
-    clean_text = "".join(words)
-    parse_str = "|".join(pos_tags)
-    stanford_pos = []
-    for i in pos_tags:
-        if i in ha2stanford_dict:
-            stanford_pos.append(ha2stanford_dict[i])
-        else:
-            stanford_pos = []
-            break
-    parse_result = Parse_result(words, pos_tags)
-    return parse_result, clean_text, stanford_pos
+    for i in ha_parse_result.word:
+        word = Word(i.LEMMA, ha2stanford_dict[i.CPOSTAG], i.CPOSTAG)
+        words.append(word)
+    parse_result = Parse_result(words)
+    return parse_result
 
 
 ###################
@@ -247,8 +266,18 @@ with open('./datasets/np_pattern') as np_file:
     del(lines[0])
     for line in lines:
         line = line.strip().split()
-        phrase_pattern = XPattern(line[0], line[1], line[2], line[3], line[4])
+        phrase_pattern = Phrase(line[0], line[1], line[2], line[3], line[4])
         phrase_patterns.append(phrase_pattern)
+
+with open('./datasets/ss_pattern') as ss_file:
+    ss_patterns = []
+    lines = ss_file.readlines()
+    del(lines[0])
+    for line in lines:
+        line = line.strip().split()
+        if len(line) > 1:
+            ss_pattern = Sub_sentence(line[0], line[1])
+            ss_patterns.append(ss_pattern)
 
 
 line = corpus.readline()
@@ -274,12 +303,10 @@ while line:
 
         # parse
         print(sub_sentences)
-        parse_result, clean_text, stanford_pos = hanlp_parse(line)
-        print(parse_result, clean_text, stanford_pos)
-        stanford_parse_str = "|".join(stanford_pos)
+        parse_result = hanlp_parse(line)
 
+        for 
         # 查看是否在ss_pattern中
-        
         check_xps(parse_result)
         break
     break
