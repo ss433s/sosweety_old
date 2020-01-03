@@ -1,12 +1,13 @@
 # import jieba
 import re, json, argparse
+import regex as re2
 import jieba
 import jieba.posseg
 from pyhanlp import HanLP
 import sys
 sys.path.append("..")
 from sub_sentence import ahaha as ahaha
-from utils import tuple_in_tuple
+from utils import tuple_in_tuple, find_all_sub_list
 
 
 # ###########################各种类######################
@@ -56,12 +57,12 @@ class Phrase(object):
         self.pos_tag = self.phrase_type
         self.core_word_index = core_word_index
         self.pos_str = pos_str
+        self.pos_tags = self.pos_str.split('|')
         self.freq = freq
         self.meaning = meaning
 
-    def concrete(self, words, pos_tags):
+    def concrete(self, words):
         self.words = words
-        self.pos_tags = pos_tags
         self.core_word = self.words[self.core_word_index]
         self.value = "".join(self.words)
 
@@ -151,26 +152,41 @@ def check_parse_result(parse_result):
 
 ###################
 # 词组检测
-# 返回所有词组组合
+# 构建所有可能的词组组合
 ###################
-def check_xps(parse_result):
-    def check_nps():
-        nps = {}
-        with open('datasets/np_pattern') as f:
-            lines = f.readlines()
-            for line in lines:
-                line = line.strip().split('\t')
-                patterns = []
-                for i in range(int(len(line)/2)):
-                    pattern = Phrase(line[0], line[i*2+1], line[i*2+2])
-                    patterns.append(pattern)
-                nps[line[0]] = patterns
-            print(nps)
-        # for tag in nps:
-        #     if tag in parse_result.parse_str:
+def check_phrase(parse_result, final_results):
+    not_done = []
+    for phrase_pattern in phrase_patterns:
+        new_parse_results = find_single_phrase(parse_result, phrase_pattern)
+        not_done.append(len(new_parse_results) == 0)
+        for new_parse_result in new_parse_results:
+            if check_ss_pattern(new_parse_result):
+                final_results.append(new_parse_result)
+            check_phrase(new_parse_result, final_results)
+    if all(not_done):
+        return
 
-    check_nps()
-    return
+
+# 检测一个phrase pattern 在一份parse result中的所有位置
+def find_single_phrase(parse_result, phrase_pattern):
+    new_parse_results = []
+    sites = find_all_sub_list(phrase_pattern.pos_tags, parse_result.pos_tags)
+    print(sites)
+    return new_parse_results
+
+
+sites = find_all_sub_list(['NN','NN'], ['NN','NN','NN','NN'])
+print(sites)
+
+
+
+# check_sub_sentence
+def check_ss_pattern(parse_result):
+    result = False
+    for ss_pattern in ss_patterns:
+        if parse_result.parse_str == ss_pattern.parse_str:
+            result = True
+    return result
 
 
 ###################
@@ -188,17 +204,7 @@ def parataxis_finder():
     return
 
 
-###################
-# check_sub_sentence
-###################
-def check_ss_pattern(parse_result):
-    result = False
-    for ss_pattern in ss_patterns:
-        if parse_result.parse_str == ss_pattern.parse_str:
-            result = True
-            continue
 
-    return
 
 
 ###################
@@ -305,9 +311,6 @@ while line:
         print(sub_sentences)
         parse_result = hanlp_parse(line)
 
-        for 
-        # 查看是否在ss_pattern中
-        check_xps(parse_result)
         break
     break
     line = corpus.readline()
