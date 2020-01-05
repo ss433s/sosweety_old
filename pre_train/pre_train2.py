@@ -171,7 +171,20 @@ def check_phrase(parse_result, final_results):
 def find_single_phrase(parse_result, phrase_pattern):
     new_parse_results = []
     sites = find_all_sub_list(phrase_pattern.pos_tags, parse_result.pos_tags)
-    print(sites)
+    # print(sites)
+    for site in sites:
+        words = parse_result.words[site: site+len(phrase_pattern.pos_tags)]
+        phrase = phrase.concrete(words)
+        new_parse_content = []
+        for i in range(len(parse_result.words)):
+            if i in range(site, site+len(phrase_pattern.pos_tags)):
+                continue
+            elif i == site+len(phrase_pattern.pos_tags):
+                new_parse_content.append(phrase)
+            else:
+                new_parse_content.append(parse_result.content[i])
+        new_parse_result = Parse_result(new_parse_content)
+        new_parse_results.append(new_parse_result)
     return new_parse_results
 
 
