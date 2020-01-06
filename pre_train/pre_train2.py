@@ -1,6 +1,6 @@
 # import jieba
 import re, json, argparse
-import regex as re2
+# import regex as re2
 import jieba
 import jieba.posseg
 from pyhanlp import HanLP
@@ -50,8 +50,8 @@ class Word(object):
         return s
 
 
-# Phrase类 不同类型短语类
-class Phrase(object):
+# Phrase pattern和Phrase类 不同类型短语类型和短语实例
+class Phrase_pattern(object):
     def __init__(self, phrase_type, pos_str, freq, core_word_index, meaning):
         self.phrase_type = phrase_type
         self.pos_tag = self.phrase_type
@@ -61,9 +61,30 @@ class Phrase(object):
         self.freq = freq
         self.meaning = meaning
 
-    def concrete(self, words):
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        s += "words: %s" % (self.words)
+        s += ", pos_tags: %s" % (self.pos_tags)
+        s += ", phrase_type: %s" % (self.phrase_type)
+        s += ", freq: %s" % (self.freq)
+        s += ", meaning: %s" % (self.meaning)
+        return s
+
+
+class Phrase(object):
+    def __init__(self, phrase_pattern, words):
+        self.phrase_type = phrase_pattern.phrase_type
+        self.pos_tag = self.phrase_type
+        self.core_word_index = phrase_pattern.core_word_index
+        self.pos_str = phrase_pattern.pos_str
+        self.pos_tags = phrase_pattern.pos_tags
+        self.freq = phrase_pattern.freq
+        self.meaning = phrase_pattern.meaning
         self.words = words
-        self.core_word = self.words[self.core_word_index]
+        self.core_word = self.words[int(self.core_word_index)]
         self.value = "".join(self.words)
 
     def __str__(self):
@@ -71,7 +92,9 @@ class Phrase(object):
 
     def __repr__(self):
         s = ""
-        s += "tag: %s" % (self.tag)
+        s += "words: %s" % (self.words)
+        s += ", pos_tags: %s" % (self.pos_tags)
+        s += ", phrase_type: %s" % (self.phrase_type)
         s += ", freq: %s" % (self.freq)
         s += ", meaning: %s" % (self.meaning)
         return s
@@ -156,6 +179,8 @@ def check_parse_result(parse_result):
 ###################
 def check_phrase(parse_result, final_results):
     not_done = []
+    if check_ss_pattern(parse_result):
+        final_results.append(parse_result)
     for phrase_pattern in phrase_patterns:
         new_parse_results = find_single_phrase(parse_result, phrase_pattern)
         not_done.append(len(new_parse_results) == 0)
@@ -174,12 +199,12 @@ def find_single_phrase(parse_result, phrase_pattern):
     # print(sites)
     for site in sites:
         words = parse_result.words[site: site+len(phrase_pattern.pos_tags)]
-        phrase = phrase.concrete(words)
+        phrase = Phrase(phrase_pattern, words)
         new_parse_content = []
         for i in range(len(parse_result.words)):
-            if i in range(site, site+len(phrase_pattern.pos_tags)):
+            if i in range(site, site+len(phrase_pattern.pos_tags)-1):
                 continue
-            elif i == site+len(phrase_pattern.pos_tags):
+            elif i == site+len(phrase_pattern.pos_tags)-1:
                 new_parse_content.append(phrase)
             else:
                 new_parse_content.append(parse_result.content[i])
@@ -188,9 +213,8 @@ def find_single_phrase(parse_result, phrase_pattern):
     return new_parse_results
 
 
-sites = find_all_sub_list(['NN','NN'], ['NN','NN','NN','NN'])
+sites = find_all_sub_list(['NN', 'NN'], ['NN', 'NN', 'NN', 'NN'])
 print(sites)
-
 
 
 # check_sub_sentence
@@ -215,9 +239,6 @@ def meaningful_check():
 ###################
 def parataxis_finder():
     return
-
-
-
 
 
 ###################
@@ -285,7 +306,7 @@ with open('./datasets/np_pattern') as np_file:
     del(lines[0])
     for line in lines:
         line = line.strip().split()
-        phrase_pattern = Phrase(line[0], line[1], line[2], line[3], line[4])
+        phrase_pattern = Phrase_pattern(line[0], line[1], line[2], line[3], line[4])
         phrase_patterns.append(phrase_pattern)
 
 with open('./datasets/ss_pattern') as ss_file:
@@ -323,16 +344,13 @@ while line:
         # parse
         print(sub_sentences)
         parse_result = hanlp_parse(line)
-
+        final_results = []
+        check_phrase(parse_result, final_results)
+        rst = find_single_phrase(parse_result, phrase_patterns[0])
         break
     break
     line = corpus.readline()
 corpus.close()
-
-
-
-
-
 
 
 # ##################################
