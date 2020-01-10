@@ -84,8 +84,11 @@ class Phrase(object):
         self.freq = phrase_pattern.freq
         self.meaning = phrase_pattern.meaning
         self.words = words
-        self.core_word = self.words[int(self.core_word_index)]
         self.value = "".join(self.words)
+        if self.core_word_index == '-':
+            self.core_word = self.value
+        else:
+            self.core_word = self.words[int(self.core_word_index)]
 
     def __str__(self):
         return self.__repr__()
@@ -179,7 +182,7 @@ def check_parse_result(parse_result):
 ###################
 def check_phrase(parse_result, final_results):
     not_done = []
-    if check_ss_pattern(parse_result):
+    if check_ss_pattern(parse_result) and parse_result not in final_results:
         final_results.append(parse_result)
     for phrase_pattern in phrase_patterns:
         new_parse_results = find_single_phrase(parse_result, phrase_pattern)
@@ -300,7 +303,8 @@ except Exception:
 ###################
 # 读取短语库和句式库
 ###################
-with open('./datasets/np_pattern') as np_file:
+# with open('./datasets/np_pattern') as np_file:
+with open('./datasets/test_pattern') as np_file:
     phrase_patterns = []
     lines = np_file.readlines()
     del(lines[0])
@@ -346,6 +350,7 @@ while line:
         parse_result = hanlp_parse(line)
         final_results = []
         check_phrase(parse_result, final_results)
+        print(len(final_results))
         rst = find_single_phrase(parse_result, phrase_patterns[0])
         break
     break

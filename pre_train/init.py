@@ -4,7 +4,7 @@ from stanfordcorenlp import StanfordCoreNLP
 nlp = StanfordCoreNLP(r'/mnt/e/ubuntu/stanford-corenlp/stanford-corenlp-full-2018-10-05/', lang='zh')
 
 
-# 从parse_str中提取指定类型的短语，转化为[词，词性]的数组中的第N个元素的合集 
+# 从parse_str中提取指定类型的短语，转化为[词，词性]的数组中的第N个元素的合集
 def check_np(parse_str, xp_type):
     tag_count = 0
     sbar_str_group = []
@@ -116,7 +116,7 @@ with open('data/np_file') as np_file:
                 core_index = str(pos_str_list.index('NR'))
             if pos_str_list.count('NN') == 1 and pos_str_list.count('NR') == 0:
                 core_index = str(pos_str_list.index('NN'))
-            nn_pattern_file.write('NN\t' + count_table_df.iloc[i]['pos_str'] + '\t' + str(count_table_df.iloc[i]['count']) + '\t' + core_index +'\t-\n')
+            nn_pattern_file.write('NN\t' + count_table_df.iloc[i]['pos_str'] + '\t' + str(count_table_df.iloc[i]['count']) + '\t' + core_index + '\t-\n')
 
 with open('data/pp_file') as pp_file:
     line = pp_file.readline()
