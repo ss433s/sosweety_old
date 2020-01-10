@@ -109,7 +109,14 @@ with open('data/np_file') as np_file:
 
     with open('data/nn_pattern', 'w') as nn_pattern_file:
         for i in range(len(count_table_df)):
-            nn_pattern_file.write('NN\t' + count_table_df.iloc[i]['pos_str'] + '\t' + str(count_table_df.iloc[i]['count']) + '\t-\t-\n')
+            pos_str = count_table_df.iloc[i]['pos_str']
+            pos_str_list = pos_str.split('|')
+            core_index = '-'
+            if pos_str_list.count('NN') == 0 and pos_str_list.count('NR') == 1:
+                core_index = str(pos_str_list.index('NR'))
+            if pos_str_list.count('NN') == 1 and pos_str_list.count('NR') == 0:
+                core_index = str(pos_str_list.index('NN'))
+            nn_pattern_file.write('NN\t' + count_table_df.iloc[i]['pos_str'] + '\t' + str(count_table_df.iloc[i]['count']) + '\t' + core_index +'\t-\n')
 
 with open('data/pp_file') as pp_file:
     line = pp_file.readline()
