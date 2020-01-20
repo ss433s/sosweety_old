@@ -1,4 +1,4 @@
-# type pos_str frep core_word meaning
+# type feature frep core_word meaning
 NN	NN|NN	40862	-	-
 NN	NR|NN	27120	-	-
 NN	NT|NT	24803	-	-
@@ -140,7 +140,6 @@ NN	NN|NN|NN|VV|DEC|NN	288	-	-
 NN	NN|LC|DEG|NN	281	-	-
 NN	NR|JJ|NN|NN|NN	279	-	-
 NN	JJ|DEG	276	-	-
-NN	NN|NN|》	269	-	-
 NN	PN|VV|DEC|NN	269	3	-
 NN	CD|DEG|NN	268	2	-
 NN	P|NR|VV|DEC|CD|M|NN	265	-	-

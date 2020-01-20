@@ -103,6 +103,58 @@ class Phrase(object):
         return s
 
 
+# Special pattern和Phrase类 特殊短语
+class Special_pattern(object):
+    def __init__(self, phrase_type, feature, freq, core_word_index, meaning):
+        self.phrase_type = phrase_type
+        self.pos_tag = self.phrase_type
+        self.core_word_index = core_word_index
+        self.feature = json.loads(feature)
+        self.freq = freq
+        self.meaning = meaning
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        s += "words: %s" % (self.words)
+        s += ", feature: %s" % (self.feature)
+        s += ", phrase_type: %s" % (self.phrase_type)
+        s += ", freq: %s" % (self.freq)
+        s += ", meaning: %s" % (self.meaning)
+        return s
+
+
+class Special_phrase(object):
+    def __init__(self, phrase_pattern, words):
+        self.phrase_type = phrase_pattern.phrase_type
+        self.pos_tag = self.phrase_type
+        self.core_word_index = phrase_pattern.core_word_index
+        self.pos_str = phrase_pattern.pos_str
+        self.pos_tags = phrase_pattern.pos_tags
+        self.freq = phrase_pattern.freq
+        self.meaning = phrase_pattern.meaning
+        self.words = words
+        self.value = "".join(self.words)
+        if self.core_word_index == '-':
+            self.core_word = self.value
+        else:
+            self.core_word = self.words[int(self.core_word_index)]
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        s += "words: %s" % (self.words)
+        s += ", pos_tags: %s" % (self.pos_tags)
+        s += ", phrase_type: %s" % (self.phrase_type)
+        s += ", freq: %s" % (self.freq)
+        s += ", meaning: %s" % (self.meaning)
+        return s
+
+
 # sub sentence类 可以是句子中的一部分
 class Sub_sentence(object):
     def __init__(self, parse_str, freq):
@@ -180,6 +232,43 @@ def check_parse_result(parse_result):
 # 词组检测
 # 构建所有可能的词组组合
 ###################
+# 先检测特殊短语
+def check_special_phrase(parse_result, final_results):
+    not_done = []
+    if check_ss_pattern(parse_result) and parse_result not in final_results:
+        final_results.append(parse_result)
+    for phrase_pattern in phrase_patterns:
+        new_parse_results = find_single_phrase(parse_result, phrase_pattern)
+        not_done.append(len(new_parse_results) == 0)
+        for new_parse_result in new_parse_results:
+            if check_ss_pattern(new_parse_result):
+                final_results.append(new_parse_result)
+            check_special_phrase(new_parse_result, final_results)
+    if all(not_done):
+        return
+
+
+# 检测一个special phrase pattern 在一份parse result中的所有位置
+def find_single_special_phrase(parse_result, special_phrase):
+    new_parse_results = []
+    sites = find_all_sub_list(phrase_pattern.pos_tags, parse_result.pos_tags)
+    # print(sites)
+    for site in sites:
+        words = parse_result.words[site: site+len(phrase_pattern.pos_tags)]
+        phrase = Phrase(phrase_pattern, words)
+        new_parse_content = []
+        for i in range(len(parse_result.words)):
+            if i in range(site, site+len(phrase_pattern.pos_tags)-1):
+                continue
+            elif i == site+len(phrase_pattern.pos_tags)-1:
+                new_parse_content.append(phrase)
+            else:
+                new_parse_content.append(parse_result.content[i])
+        new_parse_result = Parse_result(new_parse_content)
+        new_parse_results.append(new_parse_result)
+    return new_parse_results
+
+
 def check_phrase(parse_result, final_results):
     not_done = []
     if check_ss_pattern(parse_result) and parse_result not in final_results:
@@ -214,10 +303,6 @@ def find_single_phrase(parse_result, phrase_pattern):
         new_parse_result = Parse_result(new_parse_content)
         new_parse_results.append(new_parse_result)
     return new_parse_results
-
-
-sites = find_all_sub_list(['NN', 'NN'], ['NN', 'NN', 'NN', 'NN'])
-print(sites)
 
 
 # check_sub_sentence
@@ -287,7 +372,7 @@ ahaha()
 parser = argparse.ArgumentParser()
 parser.add_argument("-c",
                     "--corpus",
-                    default="./data/train.txt",
+                    default="./init_data/train.txt",
                     help="corpus file folder for training",
                     required=False)
 args = parser.parse_args()
@@ -322,6 +407,41 @@ with open('./datasets/ss_pattern') as ss_file:
         if len(line) > 1:
             ss_pattern = Sub_sentence(line[0], line[1])
             ss_patterns.append(ss_pattern)
+
+with open('./datasets/special_pattern') as special_pattern_file:
+    special_patterns = []
+    lines = special_pattern_file.readlines()
+    del(lines[0])
+    for line in lines:
+        line = line.strip().split()
+        if len(line) > 1:
+            special_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4])
+            special_patterns.append(special_pattern)
+
+
+###################
+# 定义和读取知识库
+###################
+class Concept(object):
+    def __init__(self, concept_id, word, methods, properties):
+        self.concept_id = concept_id
+        self.word = word
+        self.methods = methods
+        self.properties = properties
+
+
+with open('./fake_database/Concept_table') as concept_table_file:
+    concepts = {}
+    lines = concept_table_file.readlines()
+    del(lines[0])
+    for line in lines:
+        line = line.strip().split()
+        if len(line) > 1:
+            concept = Concept(int(line[0]), line[1], line[2], line[3])
+            concepts[concept.concept_id] = concept
+
+
+
 
 
 line = corpus.readline()
