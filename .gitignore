@@ -7,3 +7,4 @@ corpus/
 model/
 init_data/
 !.vscode/launch.json
+*.DS_Store
