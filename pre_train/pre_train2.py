@@ -8,6 +8,7 @@ import sys
 sys.path.append("..")
 from sub_sentence import ahaha as ahaha
 from utils import tuple_in_tuple, find_all_sub_list
+from knowledgebase import Knowledge_base
 
 
 # ###########################各种类######################
@@ -169,11 +170,11 @@ class Sub_sentence(object):
 def seg2sentence(paragraph):
     sentences = re.split('(。|！|\!|\.|？|\?)', paragraph)
     new_sents = []
-    for i in range(int(len(sentences)/2)):
-        if 2*i + 1 < len(sentences):
-            sent = sentences[2*i] + sentences[2*i+1]
+    for i in range(int(len(sentences) / 2)):
+        if 2 * i + 1 < len(sentences):
+            sent = sentences[2 * i] + sentences[2 * i + 1]
         else:
-            sent = sentences[2*i]
+            sent = sentences[2 * i]
         new_sents.append(sent)
     return new_sents
 
@@ -196,11 +197,11 @@ def cut_sent(para):
 def seg2sub_sentence(sentence):
     sub_sentences = re.split('(，|,|;|；)', sentence)
     new_sub_sents = []
-    for i in range(int(len(sub_sentences)/2)+1):
-        if 2*i + 1 < len(sub_sentences):
-            sub_sent = sub_sentences[2*i] + sub_sentences[2*i+1]
+    for i in range(int(len(sub_sentences) / 2) + 1):
+        if 2 * i + 1 < len(sub_sentences):
+            sub_sent = sub_sentences[2 * i] + sub_sentences[2 * i + 1]
         else:
-            sub_sent = sub_sentences[2*i]
+            sub_sent = sub_sentences[2 * i]
         new_sub_sents.append(sub_sent)
     return new_sub_sents
 
@@ -250,14 +251,29 @@ def check_special_phrase(parse_result, final_results):
 def find_single_special_pattern(parse_result, special_pattern):
     new_parse_results = []
     first_feature = special_pattern.feature[0]
-    if list(first_feature.keys())[0] == 'concept':
-        pass
-    if list(first_feature.keys())[0] == 'word':
-        for j in range(len(parse_result.pos_tags)-len(special_pattern.feature)+1):
-            if parse_result.words[j] == first_feature['word']:
-                print(parse_result)
-    if list(first_feature.keys())[0] == 'special_symbol':
-        pass
+
+    for j in range(len(parse_result.pos_tags) - len(special_pattern.feature) + 1):
+        if match_one_feature(parse_result.words[j], first_feature):
+            all_result = []
+            for i in range(1, len(special_pattern.feature)):
+                rst = match_one_feature(parse_result.words[j + i], special_pattern.feature[i])
+                all_result.append(rst)
+            if all(all_result):
+                
+
+    def match_one_feature(word, feature):
+        result = False
+        if list(feature.keys())[0] == 'concept':
+            rst = KB.word_belong_to_concept(word, feature['concept'])
+            if len(rst) > 0:
+                result = True
+        if list(feature.keys())[0] == 'word':
+            if word == feature['word']:
+                result = True
+        if list(feature.keys())[0] == 'special_symbol':
+            pass
+
+        return result
 
     return new_parse_results
 
@@ -283,13 +299,13 @@ def find_single_phrase(parse_result, phrase_pattern):
     sites = find_all_sub_list(phrase_pattern.pos_tags, parse_result.pos_tags)
     # print(sites)
     for site in sites:
-        words = parse_result.words[site: site+len(phrase_pattern.pos_tags)]
+        words = parse_result.words[site: site + len(phrase_pattern.pos_tags)]
         phrase = Phrase(phrase_pattern, words)
         new_parse_content = []
         for i in range(len(parse_result.words)):
-            if i in range(site, site+len(phrase_pattern.pos_tags)-1):
+            if i in range(site, site + len(phrase_pattern.pos_tags) - 1):
                 continue
-            elif i == site+len(phrase_pattern.pos_tags)-1:
+            elif i == site + len(phrase_pattern.pos_tags) - 1:
                 new_parse_content.append(phrase)
             else:
                 new_parse_content.append(parse_result.content[i])
@@ -412,59 +428,7 @@ with open('./datasets/special_pattern') as special_pattern_file:
             special_patterns.append(special_pattern)
 
 
-
-###################
-# 定义和读取知识库
-###################
-class Concept(object):
-    def __init__(self, concept_id, word, methods, properties):
-        self.concept_id = concept_id
-        self.word = word
-        self.methods = methods
-        self.properties = properties
-
-# 读取concept表 concepts为字典 key为concept_id 值是Concept类
-with open('./fake_database/Concept_table') as concept_table_file:
-    concepts = {}
-    lines = concept_table_file.readlines()
-    del(lines[0])
-    for line in lines:
-        line = line.strip().split()
-        if len(line) > 1:
-            concept = Concept(int(line[0]), line[1], line[2], line[3])
-            concepts[concept.concept_id] = concept
-
-# 读取synonym 表（实体链接表） 构建word2concept dict （method待定）
-with open('./fake_database/Synonym_table') as synonym_table_file:
-    word2concept_dict = {}
-    lines = synonym_table_file.readlines()
-    del(lines[0])
-    for line in lines:
-        line = line.strip().split()
-        if len(line) > 1:
-            if line[3] == 'concept':
-                if line[0] in word2concept_dict:
-                    word2concept_dict[line[0]].append([line[1], line[4]])
-                else:
-                    word2concept_dict[line[0]] = [[line[1], line[4]]]
-            elif line[3] == 'method':
-                pass
-
-
-# 读取concept relation 表 构建concept_relation 字典  key为concept1_id 值为 [concept2_id, type]
-with open('./fake_database/Concept_relation_table') as concept_relation_table_file:
-    concept_relations = {}
-    lines = concept_relation_table_file.readlines()
-    del(lines[0])
-    for line in lines:
-        line = line.strip().split()
-        if len(line) > 1:
-            if line[0] in concept_relations:
-                concept_relations[line[0]].append([line[1], line[2]])
-            else:
-                concept_relations[line[0]] = [[line[1], line[2]]]
-
-
+KB = Knowledge_base()
 line = corpus.readline()
 while line:
     line = line.strip()
@@ -491,8 +455,6 @@ while line:
         parse_result = hanlp_parse(line)
 
         find_single_special_pattern(parse_result, special_patterns[0])
-
-
 
         final_results = []
         check_phrase(parse_result, final_results)
