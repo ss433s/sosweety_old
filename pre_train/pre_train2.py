@@ -15,10 +15,10 @@ from knowledgebase import Knowledge_base
 
 # parse result类
 class Parse_result(object):
-    def __init__(self, content):
-        self.content = content
-        self.pos_tags = [i.pos_tag for i in self.content]
-        self.words = [i.value for i in self.content]
+    def __init__(self, contents):
+        self.contents = contents
+        self.pos_tags = [i.pos_tag for i in self.contents]
+        self.words = [i.value for i in self.contents]
         self.parse_str = "|".join(self.pos_tags)
 
     def __str__(self):
@@ -105,11 +105,11 @@ class Phrase(object):
 
 # Special pattern和Phrase类 特殊短语
 class Special_pattern(object):
-    def __init__(self, phrase_type, feature, freq, core_word_index, meaning):
+    def __init__(self, phrase_type, features, freq, core_word_index, meaning):
         self.phrase_type = phrase_type
         self.pos_tag = self.phrase_type
         self.core_word_index = core_word_index
-        self.feature = json.loads(feature)
+        self.features = json.loads(features)
         self.freq = freq
         self.meaning = meaning
 
@@ -118,7 +118,7 @@ class Special_pattern(object):
 
     def __repr__(self):
         s = ""
-        s += ", feature: %s" % (self.feature)
+        s += ", features: %s" % (self.features)
         s += ", phrase_type: %s" % (self.phrase_type)
         s += ", freq: %s" % (self.freq)
         s += ", meaning: %s" % (self.meaning)
@@ -126,15 +126,14 @@ class Special_pattern(object):
 
 
 class Special_phrase(object):
-    def __init__(self, phrase_pattern, words):
+    def __init__(self, phrase_pattern, contents):
+        self.contents = contents
         self.phrase_type = phrase_pattern.phrase_type
         self.pos_tag = self.phrase_type
         self.core_word_index = phrase_pattern.core_word_index
-        self.pos_str = phrase_pattern.pos_str
-        self.pos_tags = phrase_pattern.pos_tags
         self.freq = phrase_pattern.freq
         self.meaning = phrase_pattern.meaning
-        self.words = words
+        self.words = [content.value for content in self.contents]
         self.value = "".join(self.words)
         if self.core_word_index == '-':
             self.core_word = self.value
@@ -147,7 +146,6 @@ class Special_phrase(object):
     def __repr__(self):
         s = ""
         s += "words: %s" % (self.words)
-        s += ", pos_tags: %s" % (self.pos_tags)
         s += ", phrase_type: %s" % (self.phrase_type)
         s += ", freq: %s" % (self.freq)
         s += ", meaning: %s" % (self.meaning)
@@ -249,32 +247,47 @@ def check_special_phrase(parse_result, final_results):
 
 # 检测一个special phrase pattern 在一份parse result中的所有位置
 def find_single_special_pattern(parse_result, special_pattern):
-    new_parse_results = []
-    first_feature = special_pattern.feature[0]
 
-    for j in range(len(parse_result.pos_tags) - len(special_pattern.feature) + 1):
-        if match_one_feature(parse_result.words[j], first_feature):
-            all_result = []
-            for i in range(1, len(special_pattern.feature)):
-                rst = match_one_feature(parse_result.words[j + i], special_pattern.feature[i])
-                all_result.append(rst)
-            if all(all_result):
-                
-
-    def match_one_feature(word, feature):
+    def match_one_feature(parse_result_content, feature):
         result = False
         if list(feature.keys())[0] == 'concept':
-            rst = KB.word_belong_to_concept(word, feature['concept'])
+            rst = KB.word_belong_to_concept(parse_result_content.value, feature['concept'])
             if len(rst) > 0:
                 result = True
         if list(feature.keys())[0] == 'word':
-            if word == feature['word']:
+            if parse_result_content.value == feature['word']:
                 result = True
         if list(feature.keys())[0] == 'special_symbol':
             pass
-
+        if list(feature.keys())[0] == 'pos_tag':
+            if parse_result_content.pos_tag == feature['pos_tag']:
+                result = True
         return result
 
+    new_parse_results = []
+    first_feature = special_pattern.features[0]
+
+    new_parse_result_contents = []
+    for j in range(len(parse_result.pos_tags) - len(special_pattern.features) + 1):
+        if match_one_feature(parse_result.contents[j], first_feature):
+            i = 1
+            while len(parse_result.contents) > j + i and len(special_pattern.features) > i:
+                if match_one_feature(parse_result.contents[j + i], special_pattern.features[i]):
+                    i += 1
+                    continue
+                else:
+                    break
+
+            if i == len(special_pattern.features):
+                contents = parse_result.contents[j: j + i]
+                special_phrase = Special_phrase(special_pattern, contents)
+                new_parse_result_contents.append(special_phrase)
+                if j + i < len(parse_result.contents):
+                    new_parse_result_contents.append(parse_result.contents[j + i: len(parse_result.contents)])
+                new_parse_result = Parse_result(new_parse_result_contents)
+                new_parse_results.append(new_parse_result)
+        else:
+            new_parse_result_contents.append(parse_result.contents[j])
     return new_parse_results
 
 
@@ -398,13 +411,13 @@ except Exception:
 # 读取短语库和句式库
 ###################
 # with open('./datasets/np_pattern') as np_file:
-with open('./datasets/test_pattern') as np_file:
+with open('./datasets/new_test_file') as pattern_file:
     phrase_patterns = []
-    lines = np_file.readlines()
+    lines = pattern_file.readlines()
     del(lines[0])
     for line in lines:
-        line = line.strip().split()
-        phrase_pattern = Phrase_pattern(line[0], line[1], line[2], line[3], line[4])
+        line = line.strip().split('\t')
+        phrase_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4])
         phrase_patterns.append(phrase_pattern)
 
 with open('./datasets/ss_pattern') as ss_file:
@@ -417,15 +430,15 @@ with open('./datasets/ss_pattern') as ss_file:
             ss_pattern = Sub_sentence(line[0], line[1])
             ss_patterns.append(ss_pattern)
 
-with open('./datasets/special_pattern') as special_pattern_file:
-    special_patterns = []
-    lines = special_pattern_file.readlines()
-    del(lines[0])
-    for line in lines:
-        line = line.strip().split()
-        if len(line) > 1:
-            special_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4])
-            special_patterns.append(special_pattern)
+# with open('./datasets/special_pattern') as special_pattern_file:
+#     special_patterns = []
+#     lines = special_pattern_file.readlines()
+#     del(lines[0])
+#     for line in lines:
+#         line = line.strip().split()
+#         if len(line) > 1:
+#             special_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4])
+#             special_patterns.append(special_pattern)
 
 
 KB = Knowledge_base()
@@ -454,10 +467,10 @@ while line:
         print(sub_sentences)
         parse_result = hanlp_parse(line)
 
-        find_single_special_pattern(parse_result, special_patterns[0])
+        find_single_special_pattern(parse_result, phrase_patterns[0])
 
         final_results = []
-        check_phrase(parse_result, final_results)
+        check_special_phrase(parse_result, final_results)
         print(len(final_results))
         rst = find_single_phrase(parse_result, phrase_patterns[0])
         break

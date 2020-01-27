@@ -1,9 +1,5 @@
-# import jieba
-import re, json, argparse
-# import regex as re2
 import sys
 sys.path.append("..")
-from utils import tuple_in_tuple, find_all_sub_list
 
 
 ###################
@@ -15,6 +11,7 @@ class Concept(object):
         self.word = word
         self.methods = methods
         self.properties = properties
+
 
 # 读取concept表 concepts为字典 key为concept_id 值是Concept类
 with open('./fake_database/Concept_table') as concept_table_file:
@@ -61,21 +58,23 @@ with open('./fake_database/Concept_relation_table') as concept_relation_table_fi
 class Knowledge_base(object):
     # def __init__(self):
 
-
     # 判定一个词语是否属于某种concept，不递归，多义词返回concept_id
     def word_belong_to_concept(self, word, concept_id):
         result = []
-        concept_ids = word2concept_dict[word]
-        for concept1_id, confidence in concept_ids:
-            concept2s = concept_relations[concept1_id]
-            for concept2_id, _ in concept2s:
-                if concept2_id == concept_id:
-                    result.append([concept1_id, confidence])
+        if word in word2concept_dict:
+            concept_ids = word2concept_dict[word]
+            for concept1_id, confidence in concept_ids:
+                if concept1_id in concept_relations:
+                    concept2s = concept_relations[concept1_id]
+                    for concept2_id, _ in concept2s:
+                        if concept2_id == concept_id:
+                            result.append([concept1_id, confidence])
         return result
 
 
-#test
-if __name__=='__main__':
+
+# test
+if __name__ == '__main__':
     KB = Knowledge_base()
     rst = KB.word_belong_to_concept("北京大学", 0)
     print(rst)
