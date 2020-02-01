@@ -12,5 +12,5 @@ with open('test_pattern') as test_file:
                 feature = {}
                 feature['pos_tag'] = pos_tag
                 features.append(feature)
-            phrase_pattern = [line[0], json.dumps(features), line[2], line[3], line[4]]
+            phrase_pattern = [line[0], json.dumps(features, ensure_ascii=False), line[2], line[3], line[4]]
             new_test_file.write('\t'.join(phrase_pattern) + '\n')

@@ -235,7 +235,7 @@ def check_special_phrase(parse_result, final_results):
     if check_ss_pattern(parse_result) and parse_result not in final_results:
         final_results.append(parse_result)
     for phrase_pattern in phrase_patterns:
-        new_parse_results = find_single_phrase(parse_result, phrase_pattern)
+        new_parse_results = find_single_special_pattern(parse_result, phrase_pattern)
         not_done.append(len(new_parse_results) == 0)
         for new_parse_result in new_parse_results:
             if check_ss_pattern(new_parse_result):
@@ -288,42 +288,6 @@ def find_single_special_pattern(parse_result, special_pattern):
                 new_parse_results.append(new_parse_result)
         else:
             new_parse_result_contents.append(parse_result.contents[j])
-    return new_parse_results
-
-
-def check_phrase(parse_result, final_results):
-    not_done = []
-    if check_ss_pattern(parse_result) and parse_result not in final_results:
-        final_results.append(parse_result)
-    for phrase_pattern in phrase_patterns:
-        new_parse_results = find_single_phrase(parse_result, phrase_pattern)
-        not_done.append(len(new_parse_results) == 0)
-        for new_parse_result in new_parse_results:
-            if check_ss_pattern(new_parse_result):
-                final_results.append(new_parse_result)
-            check_phrase(new_parse_result, final_results)
-    if all(not_done):
-        return
-
-
-# 检测一个phrase pattern 在一份parse result中的所有位置
-def find_single_phrase(parse_result, phrase_pattern):
-    new_parse_results = []
-    sites = find_all_sub_list(phrase_pattern.pos_tags, parse_result.pos_tags)
-    # print(sites)
-    for site in sites:
-        words = parse_result.words[site: site + len(phrase_pattern.pos_tags)]
-        phrase = Phrase(phrase_pattern, words)
-        new_parse_content = []
-        for i in range(len(parse_result.words)):
-            if i in range(site, site + len(phrase_pattern.pos_tags) - 1):
-                continue
-            elif i == site + len(phrase_pattern.pos_tags) - 1:
-                new_parse_content.append(phrase)
-            else:
-                new_parse_content.append(parse_result.content[i])
-        new_parse_result = Parse_result(new_parse_content)
-        new_parse_results.append(new_parse_result)
     return new_parse_results
 
 
@@ -467,12 +431,11 @@ while line:
         print(sub_sentences)
         parse_result = hanlp_parse(line)
 
-        find_single_special_pattern(parse_result, phrase_patterns[0])
+        # find_single_special_pattern(parse_result, phrase_patterns[0])
 
         final_results = []
         check_special_phrase(parse_result, final_results)
         print(len(final_results))
-        rst = find_single_phrase(parse_result, phrase_patterns[0])
         break
     break
     line = corpus.readline()

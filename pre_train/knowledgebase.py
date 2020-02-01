@@ -72,7 +72,6 @@ class Knowledge_base(object):
         return result
 
 
-
 # test
 if __name__ == '__main__':
     KB = Knowledge_base()
