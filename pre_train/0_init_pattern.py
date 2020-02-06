@@ -64,6 +64,7 @@ def group2str(sbar_word_group, pos_tags):
 #     lines = parse_file.readlines()
 
 #     np_file = open('data/np_file', 'w')
+#     np_file = open('data/np_file', 'w')
 #     pp_file = open('data/pp_file', 'w')
 
 #     for i in range(len(lines)):

@@ -253,6 +253,7 @@ def hanlp_parse(text):
             line = line.strip().split('\t')
             ha2stanford_dict[line[0]] = line[1]
     ha_parse_result = HanLP.parseDependency(text)
+    print(ha_parse_result)
     words = []
     for i in ha_parse_result.word:
         word = Word(i.LEMMA, ha2stanford_dict[i.CPOSTAG], i.CPOSTAG)
@@ -275,8 +276,16 @@ def jieba_parse(text):
     return words, pos_tags, clean_text
 
 
+###################
+# sParser类 通用parser
+###################
+class sParser(object):
+    def __init__(self, KB, mode='default', ):
+        self.mode = mode
+        self.KB = KB
 
-
+    def parse(text):
+        return text
 
 
 ###################
