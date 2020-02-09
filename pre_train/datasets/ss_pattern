@@ -1,13 +1,15 @@
-# parse_str freq
-NN	49034	
-NN|VC|NN	13198
-AP	13166
-NTP|VV	12721
+# parse_str freq    
+NN	49034	s   -
+NN	9034	q   -
+NN|VC|NN	13198   s   subj:0:1,obj:1:2
+NN|VV|NN	5088   s   subj:0:1,obj:1:2
+AP	13166   s   amod:0:?
+NTP|VV	12721   s   time:0:1
 NN|VV	9557
 VV|NN	7767
 NTP	6622
 NTP|VV|NN	5518
-NN|VV|NN	5088
+
 P|NN|VV	4379
 NN|QP	2171
 VV|P|NTP	2016

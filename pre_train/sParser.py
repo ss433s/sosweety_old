@@ -6,12 +6,9 @@ import jieba.posseg
 from pyhanlp import HanLP
 import sys
 sys.path.append("..")
-from sub_sentence import ahaha as ahaha
-from utils import tuple_in_tuple, find_all_sub_list
+# from utils import tuple_in_tuple, find_all_sub_list
 from knowledgebase import Knowledge_base
 
-
-# ###########################各种类######################
 
 # parse result类
 class Parse_result(object):
@@ -73,6 +70,7 @@ class Special_pattern(object):
         return s
 
 
+# Special pattern的实例，有具体的词语内容
 class Special_phrase(object):
     def __init__(self, phrase_pattern, contents):
         self.contents = contents
@@ -100,11 +98,17 @@ class Special_phrase(object):
         return s
 
 
-# sub sentence类 可以是句子中的一部分
+# sub sentence类 可以是句子中的一部分 可能还需要pattern和pre
 class Sub_sentence(object):
     def __init__(self, parse_str, freq):
         self.parse_str = parse_str
         self.freq = freq
+
+
+class Pre_sub_sentence(object):
+    def __init__(self, value, type=None):
+        self.value = value
+        self.type = type
 
 
 # ###########################各种函数######################
@@ -138,8 +142,10 @@ def cut_sent(para):
 
 ###################
 # 拆分子句
-# to do 引号破折号等，引号纠错
+# to do 引号破折号等，引号纠错 小数点处理
 ###################
+'''
+带逗号的版本
 def seg2sub_sentence(sentence):
     sub_sentences = re.split('(，|,|;|；)', sentence)
     new_sub_sents = []
@@ -150,6 +156,19 @@ def seg2sub_sentence(sentence):
             sub_sent = sub_sentences[2 * i]
         new_sub_sents.append(sub_sent)
     return new_sub_sents
+'''
+
+
+def seg2sub_sentence(sentence):
+    sub_sentences = re.split('(，|,|;|；)', sentence)
+    new_sub_sents = []
+    for i in range(len(sub_sentences)):
+        if i % 2 == 0:
+            sub_sent = Pre_sub_sentence(sub_sentences[i])
+        else:
+            sub_sent = Word(sub_sentences[i], 'PU')
+        new_sub_sents.append(sub_sent)
+    return new_sub_sents
 
 
 ###################
@@ -157,17 +176,21 @@ def seg2sub_sentence(sentence):
 # 构建所有可能的词组组合
 ###################
 # 先检测特殊短语
-def check_special_phrase(parse_result, final_results):
+def check_special_phrase(parse_result, final_results, N=0):
+    # print('next')
     not_done = []
     if check_ss_pattern(parse_result) and parse_result not in final_results:
         final_results.append(parse_result)
-    for phrase_pattern in phrase_patterns:
+    for i in range(len(phrase_patterns)):
+        phrase_pattern = phrase_patterns[i]
+        if i % 1000 == 0 and N < 2:
+            print(i, N)
         new_parse_results = find_single_special_pattern(parse_result, phrase_pattern)
         not_done.append(len(new_parse_results) == 0)
         for new_parse_result in new_parse_results:
             if check_ss_pattern(new_parse_result):
                 final_results.append(new_parse_result)
-            check_special_phrase(new_parse_result, final_results)
+            check_special_phrase(new_parse_result, final_results, N + 1)
     if all(not_done):
         return
 
@@ -194,7 +217,6 @@ def find_single_special_pattern(parse_result, special_pattern):
     new_parse_results = []
     first_feature = special_pattern.features[0]
 
-    new_parse_result_contents = []
     for j in range(len(parse_result.pos_tags) - len(special_pattern.features) + 1):
         if match_one_feature(parse_result.contents[j], first_feature):
             i = 1
@@ -206,15 +228,14 @@ def find_single_special_pattern(parse_result, special_pattern):
                     break
 
             if i == len(special_pattern.features):
+                new_parse_result_contents = parse_result.contents[0:j]
                 contents = parse_result.contents[j: j + i]
                 special_phrase = Special_phrase(special_pattern, contents)
                 new_parse_result_contents.append(special_phrase)
                 if j + i < len(parse_result.contents):
-                    new_parse_result_contents.append(parse_result.contents[j + i: len(parse_result.contents)])
+                    new_parse_result_contents += parse_result.contents[j + i: len(parse_result.contents)]
                 new_parse_result = Parse_result(new_parse_result_contents)
                 new_parse_results.append(new_parse_result)
-        else:
-            new_parse_result_contents.append(parse_result.contents[j])
     return new_parse_results
 
 
@@ -253,7 +274,7 @@ def hanlp_parse(text):
             line = line.strip().split('\t')
             ha2stanford_dict[line[0]] = line[1]
     ha_parse_result = HanLP.parseDependency(text)
-    print(ha_parse_result)
+    # print(ha_parse_result)
     words = []
     for i in ha_parse_result.word:
         word = Word(i.LEMMA, ha2stanford_dict[i.CPOSTAG], i.CPOSTAG)
@@ -274,18 +295,6 @@ def jieba_parse(text):
         pos_tags.append(flag)
     clean_text = "".join(words)
     return words, pos_tags, clean_text
-
-
-###################
-# sParser类 通用parser
-###################
-class sParser(object):
-    def __init__(self, KB, mode='default', ):
-        self.mode = mode
-        self.KB = KB
-
-    def parse(text):
-        return text
 
 
 ###################
@@ -312,10 +321,45 @@ with open('./datasets/ss_pattern') as ss_file:
             ss_patterns.append(ss_pattern)
 
 
-
 KB = Knowledge_base()
 
 
+###################
+# sParser类 通用parser
+###################
+class sParser(object):
+    def __init__(self, KB, mode='default'):
+        self.mode = mode
+        self.KB = KB
+
+    def parse(self, text):
+
+        # 1，判定文本类型。对话/新闻稿/公告 等。可自动发现，自动学习
+        # to do
+
+        # 2，分句。
+        # to do
+        sentences = cut_sent(text)
+
+        # 3，逐句parse
+        for sentence in sentences:
+            # 分句的句号处理 可以直接进行分类
+            # to do
+            sentence = re.sub('([。！？\?])', '', sentence)
+            sub_sentences = seg2sub_sentence(sentence)
+
+            for sub_sentence in sub_sentences:
+                print(sub_sentence.value)
+                if isinstance(sub_sentence, Pre_sub_sentence):
+                    print(sub_sentence.value)
+                    parse_result = hanlp_parse(sub_sentence.value)
+
+                    final_results = []
+                    # check_special_phrase(parse_result, final_results)
+                    print(len(final_results))
+                    # break
+
+                    return final_results
 
 
 if __name__ == '__main__':
@@ -327,6 +371,20 @@ if __name__ == '__main__':
                         required=False)
     args = parser.parse_args()
 
+    parser = sParser(KB)
+    # parser.parse('即：阿尔法粒子。')
+
+
+
+
+
+
+
+
+
+
+
+    # ################## old version #############
     ###################
     # 读取待处理语料，格式为每行一个数据，每个数据可以是多句话组成
     ###################
@@ -335,11 +393,11 @@ if __name__ == '__main__':
     except Exception:
         corpus = open(args.corpus, 'r', encoding='gbk')
 
-
     line = corpus.readline()
     while line:
         line = line.strip()
 
+        parser.parse(line)
         # 语料分句
         # sentences = seg2sentence(line)
         sentences = cut_sent(line)
@@ -355,18 +413,19 @@ if __name__ == '__main__':
 
         # 拆分子句
         for sentence in sentences:
+            sentence = re.sub('([。！？\?])', '', sentence)
             sub_sentences = seg2sub_sentence(sentence)
 
             # parse
-            print(sub_sentences)
-            parse_result = hanlp_parse(line)
+            # print(sub_sentences)
+            # parse_result = hanlp_parse(line)
 
-            # find_single_special_pattern(parse_result, phrase_patterns[0])
+            # # find_single_special_pattern(parse_result, phrase_patterns[0])
 
-            final_results = []
-            check_special_phrase(parse_result, final_results)
-            print(len(final_results))
-            break
-        break
+            # final_results = []
+            # check_special_phrase(parse_result, final_results)
+            # print(len(final_results))
+            # break
+        # break
         line = corpus.readline()
     corpus.close()

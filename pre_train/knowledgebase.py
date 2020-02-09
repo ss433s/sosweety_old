@@ -13,6 +13,29 @@ class Concept(object):
         self.properties = properties
 
 
+class Method(object):
+    def __init__(self, method_id, word, code):
+        self.method_id = method_id
+        self.word = word
+        self.code = code
+
+
+class Fact(object):
+    def __init__(self, fact_id, concept1=None, restriction1=None,
+                                concept2=None, restriction2=None,
+                                relation=None, relation_restriction=None,
+                                time=None, location=None):
+        self.fact_id = fact_id
+        self.concept1 = concept1
+        self.restriction1 = restriction1
+        self.concept2 = concept2
+        self.restriction2 = restriction2
+        self.relation = relation
+        self.relation_restriction = relation_restriction
+        self.time = time
+        self.location = location
+
+
 # 读取concept表 concepts为字典 key为concept_id 值是Concept类
 with open('./fake_database/Concept_table') as concept_table_file:
     concepts = {}
@@ -24,8 +47,19 @@ with open('./fake_database/Concept_table') as concept_table_file:
             concept = Concept(int(line[0]), line[1], line[2], line[3])
             concepts[concept.concept_id] = concept
 
-# 读取synonym 表（实体链接表） 构建word2concept dict （method待定）
-with open('./fake_database/Synonym_table') as synonym_table_file:
+# 读取method表 methods为字典 key为method_id 值是method类
+with open('./fake_database/Method_table') as method_table_file:
+    methods = {}
+    lines = method_table_file.readlines()
+    del(lines[0])
+    for line in lines:
+        line = line.strip().split()
+        if len(line) > 1:
+            method = Method(int(line[0]), line[1], line[2])
+            methods[method.method_id] = method
+
+# 读取Word表（词对应各种内部储存的表） 构建word2concept dict 和word2method dict
+with open('./fake_database/Word_table') as synonym_table_file:
     word2concept_dict = {}
     lines = synonym_table_file.readlines()
     del(lines[0])
@@ -39,7 +73,6 @@ with open('./fake_database/Synonym_table') as synonym_table_file:
                     word2concept_dict[line[0]] = [[int(line[1]), float(line[4])]]
             elif line[3] == 'method':
                 pass
-
 
 # 读取concept relation 表 构建concept_relation 字典  key为concept1_id 值为 [concept2_id, type]
 with open('./fake_database/Concept_relation_table') as concept_relation_table_file:
@@ -70,6 +103,44 @@ class Knowledge_base(object):
                         if concept2_id == concept_id:
                             result.append([concept1_id, confidence])
         return result
+
+    # fake database version
+    def merge(self, k_points):
+        for k_point in k_points:
+            if k_point.k_type == 'concept':
+                if 'concept_id' in k_point.content:
+                    concept_id = k_point.content['concept_id']
+                    if 'methods' in k_point.content:
+                        concepts[concept_id]['methods'] += k_point.content['methods']
+                    if 'properties' in k_point.content:
+                        concepts[concept_id]['properties'] += k_point.content['properties']
+                else:
+                    concept_id = len(concepts.keys())
+                    if 'methods' in k_point.content:
+                        concepts[concept_id]['methods'] = k_point.content['methods']
+                    if 'properties' in k_point.content:
+                        concepts[concept_id]['properties'] = k_point.content['properties']
+
+            if k_point.k_type == 'method':
+                if 'method_id' in k_point.content:
+                    continue
+                else:
+                    method_id = len(methods.keys())
+                    methods[method_id] = Method(method_id, k_point.content['word'], [])
+
+            if k_point.k_type == 'fact':
+                facts.append(k_point.content['fact'])
+        return
+
+
+class K_point(object):
+    # type 包括 concept， method， fact， word等
+    # content 格式为字典
+    # content 包括id的话，为更新属性, 不包含为新增
+    # fact 需先处理concept入库问题  必须先传入concept 再生出fact 然后传入fact
+    def __init__(self, k_type, content):
+        self.k_type = k_type
+        self.content = content
 
 
 # test
