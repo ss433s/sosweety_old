@@ -98,17 +98,28 @@ class Special_phrase(object):
         return s
 
 
-# sub sentence类 可以是句子中的一部分 可能还需要pattern和pre
-class Sub_sentence(object):
-    def __init__(self, parse_str, freq):
+# sub sentence  pre是临时存储用的，只有字符串，可以根据标点符号给出type
+class Sub_sentence_pattern(object):
+    def __init__(self, parse_str, freq, ss_type, meaning):
         self.parse_str = parse_str
         self.freq = freq
+        self.ss_type = ss_type
+        self.meaning = meaning
+
+
+class Sub_sentence(object):
+    def __init__(self, ss_pattern, parse_result):
+        self.parse_str = ss_pattern.parse_str
+        self.freq = ss_pattern.freq
+        self.ss_type = ss_pattern.ss_type
+        self.meaning = ss_pattern.meaning
+        self.parse_result = parse_result
 
 
 class Pre_sub_sentence(object):
-    def __init__(self, value, type=None):
+    def __init__(self, value, ss_type=None):
         self.value = value
-        self.type = type
+        self.ss_type = ss_type
 
 
 # ###########################各种函数######################
@@ -179,8 +190,13 @@ def seg2sub_sentence(sentence):
 def check_special_phrase(parse_result, final_results, N=0):
     # print('next')
     not_done = []
-    if check_ss_pattern(parse_result) and parse_result not in final_results:
-        final_results.append(parse_result)
+    # 自身就在ss_pattern中
+    matched_ss_pattern = check_ss_pattern(parse_result)
+    if len(matched_ss_pattern) > 0:
+        for ss_pattern in matched_ss_pattern:
+            ss = Sub_sentence(ss_pattern, parse_result)
+            final_results.append(ss)
+    # 替换phrase后在ss_pattern中
     for i in range(len(phrase_patterns)):
         phrase_pattern = phrase_patterns[i]
         if i % 1000 == 0 and N < 2:
@@ -188,8 +204,11 @@ def check_special_phrase(parse_result, final_results, N=0):
         new_parse_results = find_single_special_pattern(parse_result, phrase_pattern)
         not_done.append(len(new_parse_results) == 0)
         for new_parse_result in new_parse_results:
-            if check_ss_pattern(new_parse_result):
-                final_results.append(new_parse_result)
+            matched_ss_pattern = check_ss_pattern(new_parse_result)
+            if len(matched_ss_pattern) > 0:
+                for ss_pattern in matched_ss_pattern:
+                    ss = Sub_sentence(ss_pattern, parse_result)
+                    final_results.append(ss)
             check_special_phrase(new_parse_result, final_results, N + 1)
     if all(not_done):
         return
@@ -239,12 +258,12 @@ def find_single_special_pattern(parse_result, special_pattern):
     return new_parse_results
 
 
-# check_sub_sentence
+# check_sub_sentence  返回所有匹配到的ss_pattern
 def check_ss_pattern(parse_result):
-    result = False
+    result = []
     for ss_pattern in ss_patterns:
         if parse_result.parse_str == ss_pattern.parse_str:
-            result = True
+            result.append(ss_pattern)
     return result
 
 
@@ -253,6 +272,15 @@ def check_ss_pattern(parse_result):
 # 返回true or false
 ###################
 def meaningful_check():
+    return
+
+
+###################
+# 算分
+###################
+def cal_score(parse_result):
+    for item in parse_result:
+        if 
     return
 
 
@@ -317,7 +345,7 @@ with open('./datasets/ss_pattern') as ss_file:
     for line in lines:
         line = line.strip().split()
         if len(line) > 1:
-            ss_pattern = Sub_sentence(line[0], line[1])
+            ss_pattern = Sub_sentence_pattern(line[0], line[1])
             ss_patterns.append(ss_pattern)
 
 

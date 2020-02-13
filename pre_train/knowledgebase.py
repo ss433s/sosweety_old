@@ -1,4 +1,5 @@
 import sys
+import json
 sys.path.append("..")
 
 
@@ -44,9 +45,9 @@ with open('./fake_database/Concept_table') as concept_table_file:
     lines = concept_table_file.readlines()
     del(lines[0])
     for line in lines:
-        line = line.strip().split()
+        line = line.strip().split('\t')
         if len(line) > 1:
-            concept = Concept(int(line[0]), line[1], line[2], line[3])
+            concept = Concept(int(line[0]), line[1], json.loads(line[2]), json.loads(line[3]))
             concepts[concept.concept_id] = concept
 
 # 读取method表 methods为字典 key为method_id 值是method类
@@ -148,17 +149,19 @@ class Knowledge_base(object):
                 if 'concept_id' in k_point.content:
                     concept_id = k_point.content['concept_id']
                     if 'methods' in k_point.content:
-                        concepts[concept_id]['methods'] += k_point.content['methods']
+                        tmp = concepts[concept_id].methods + k_point.content['methods']
+                        concepts[concept_id].methods = list(set(tmp))
                     if 'properties' in k_point.content:
-                        concepts[concept_id]['properties'] += k_point.content['properties']
+                        tmp = concepts[concept_id].properties + k_point.content['properties']
+                        concepts[concept_id].properties = list(set(tmp))
                 else:
                     concept_id = len(concepts.keys())
-                    concepts[concept_id] = {}
+                    concepts[concept_id] = Concept(concept_id, k_point.content['word'], [], [])
                     # concepts[concept_id]['word']
                     if 'methods' in k_point.content:
-                        concepts[concept_id]['methods'] = k_point.content['methods']
+                        concepts[concept_id].methods = k_point.content['methods']
                     if 'properties' in k_point.content:
-                        concepts[concept_id]['properties'] = k_point.content['properties']
+                        concepts[concept_id].properties = k_point.content['properties']
 
             if k_point.k_type == 'method':
                 if not ['Method', methods] in update_list:
@@ -191,7 +194,10 @@ class Knowledge_base(object):
                     value_list = []
                     for k, v in vars(file_dict[i]).items():
                         if v is not None:
-                            value_list.append(str(v))
+                            if isinstance(v, str):
+                                value_list.append(v)
+                            else:
+                                value_list.append(json.dumps(v, ensure_ascii=False))
                         else:
                             value_list.append('-')
                     f.write('\t'.join(value_list) + '\n')
@@ -212,8 +218,8 @@ class K_point(object):
 if __name__ == '__main__':
     KB = Knowledge_base()
     rst = KB.word_belong_to_concept("北京大学", 0)
-    k_point = K_point('concept', {'concept_id': 1, 'methods': [0]})
-    k_point = K_point('concept', {'methods': [0]})
+    k_point = K_point('concept', {'concept_id': 2, 'properties': [5]})
+    # k_point = K_point('concept', {'word': '南京', 'methods': [0]})
     fact = Fact(1)
     # k_point = K_point('fact', {'fact': fact})
     KB.merge([k_point])
