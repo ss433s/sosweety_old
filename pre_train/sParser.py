@@ -23,9 +23,9 @@ class Parse_result(object):
 
     def __repr__(self):
         s = ""
-        s += "words: %s" % (self.words)
-        s += ", pos_tags: %s" % (self.pos_tags)
-        # s += ", parse_str: %s" % (self.parse_str)
+        # s += "words: %s" % (self.words)
+        # s += ", pos_tags: %s" % (self.pos_tags)
+        s += ", content: %s" % (self.contents)
         return s
 
 
@@ -55,7 +55,7 @@ class Special_pattern(object):
         self.pos_tag = self.phrase_type
         self.core_word_index = core_word_index
         self.features = json.loads(features)
-        self.freq = freq
+        self.freq = float(freq)
         self.meaning = meaning
 
     def __str__(self):
@@ -75,6 +75,7 @@ class Special_phrase(object):
     def __init__(self, phrase_pattern, contents):
         self.contents = contents
         self.phrase_type = phrase_pattern.phrase_type
+        self.features = phrase_pattern.features
         self.pos_tag = self.phrase_type
         self.core_word_index = phrase_pattern.core_word_index
         self.freq = phrase_pattern.freq
@@ -91,10 +92,12 @@ class Special_phrase(object):
 
     def __repr__(self):
         s = ""
-        s += "words: %s" % (self.words)
-        s += ", phrase_type: %s" % (self.phrase_type)
+        # s += "words: %s" % (self.words)
+        s += "phrase_type: %s" % (self.phrase_type)
         s += ", freq: %s" % (self.freq)
         s += ", meaning: %s" % (self.meaning)
+        s += ", features: %s" % (self.features)
+        s += ", contents: %s" % (self.contents)
         return s
 
 
@@ -102,18 +105,30 @@ class Special_phrase(object):
 class Sub_sentence_pattern(object):
     def __init__(self, parse_str, freq, ss_type, meaning):
         self.parse_str = parse_str
-        self.freq = freq
+        self.freq = float(freq)
         self.ss_type = ss_type
         self.meaning = meaning
 
 
 class Sub_sentence(object):
-    def __init__(self, ss_pattern, parse_result):
+    def __init__(self, ss_pattern, contents):
         self.parse_str = ss_pattern.parse_str
         self.freq = ss_pattern.freq
         self.ss_type = ss_pattern.ss_type
         self.meaning = ss_pattern.meaning
-        self.parse_result = parse_result
+        self.contents = contents
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        s += "parse_str: %s" % (self.parse_str)
+        s += ", ss_type: %s" % (self.ss_type)
+        s += ", freq: %s" % (self.freq)
+        s += ", meaning: %s" % (self.meaning)
+        s += ", contents: %s" % (self.contents)
+        return s
 
 
 class Pre_sub_sentence(object):
@@ -191,11 +206,16 @@ def check_special_phrase(parse_result, final_results, N=0):
     # print('next')
     not_done = []
     # 自身就在ss_pattern中
+    final_results_str = [str(final_result) for final_result in final_results]
+
     matched_ss_pattern = check_ss_pattern(parse_result)
     if len(matched_ss_pattern) > 0:
         for ss_pattern in matched_ss_pattern:
-            ss = Sub_sentence(ss_pattern, parse_result)
-            final_results.append(ss)
+            ss = Sub_sentence(ss_pattern, parse_result.contents)
+            if str(ss) not in final_results_str:
+                final_results.append(ss)
+                final_results_str.append(str(ss))
+
     # 替换phrase后在ss_pattern中
     for i in range(len(phrase_patterns)):
         phrase_pattern = phrase_patterns[i]
@@ -207,8 +227,10 @@ def check_special_phrase(parse_result, final_results, N=0):
             matched_ss_pattern = check_ss_pattern(new_parse_result)
             if len(matched_ss_pattern) > 0:
                 for ss_pattern in matched_ss_pattern:
-                    ss = Sub_sentence(ss_pattern, parse_result)
-                    final_results.append(ss)
+                    ss = Sub_sentence(ss_pattern, new_parse_result.contents)
+                    if str(ss) not in final_results_str:
+                        final_results.append(ss)
+                        final_results_str.append(str(ss))
             check_special_phrase(new_parse_result, final_results, N + 1)
     if all(not_done):
         return
@@ -268,20 +290,47 @@ def check_ss_pattern(parse_result):
 
 
 ###################
-# meaningful_check
-# 返回true or false
+# 算分 以及 主谓宾计算
 ###################
-def meaningful_check():
-    return
+
+# 读取主谓宾统计文件
+with open('./datasets/nsubj_pr_stat') as nsubj_file:
+    nsubj_dict = {}
+    lines = nsubj_file.readlines()
+    for line in lines:
+        line = line.strip().split('\t')
+        nsubj_dict[line[0]] = int(line[1])
+
+with open('./datasets/dobj_pr_stat') as dobj_file:
+    dobj_dict = {}
+    lines = dobj_file.readlines()
+    for line in lines:
+        line = line.strip().split('\t')
+        dobj_dict[line[0]] = int(line[1])
+
+with open('./datasets/amod_pr_stat') as amod_file:
+    amod_dict = {}
+    lines = amod_file.readlines()
+    for line in lines:
+        line = line.strip().split('\t')
+        amod_dict[line[0]] = int(line[1])
 
 
-###################
-# 算分
-###################
-def cal_score(parse_result):
-    for item in parse_result:
-        if 
-    return
+def cal_score(structure, score=0):
+    score += structure.freq
+    for item in structure.contents:
+        if isinstance(item, Special_phrase):
+            score = cal_score(item, score)
+
+    # 主谓宾分数计算
+    if structure.meaning != '-':
+        relations = structure.meaning.split(',')
+        for relation in relations:
+            relation = relation.split(':')
+            if relation[0] == 'subj':
+                
+
+    return score
 
 
 ###################
@@ -345,7 +394,7 @@ with open('./datasets/ss_pattern') as ss_file:
     for line in lines:
         line = line.strip().split()
         if len(line) > 1:
-            ss_pattern = Sub_sentence_pattern(line[0], line[1])
+            ss_pattern = Sub_sentence_pattern(line[0], line[1], line[2], line[3])
             ss_patterns.append(ss_pattern)
 
 
@@ -361,6 +410,8 @@ class sParser(object):
         self.KB = KB
 
     def parse(self, text):
+
+        result = []
 
         # 1，判定文本类型。对话/新闻稿/公告 等。可自动发现，自动学习
         # to do
@@ -383,11 +434,22 @@ class sParser(object):
                     parse_result = hanlp_parse(sub_sentence.value)
 
                     final_results = []
-                    # check_special_phrase(parse_result, final_results)
+                    check_special_phrase(parse_result, final_results)
                     print(len(final_results))
+                    print(final_results[0])
                     # break
 
-                    return final_results
+                    score = cal_score(final_results[5])
+                    print(score)
+
+                    if self.mode == 'default':
+                        continue
+
+                    result.append(final_results)
+                else:
+                    result.append(sub_sentence)
+
+        return result
 
 
 if __name__ == '__main__':
@@ -400,7 +462,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     parser = sParser(KB)
-    # parser.parse('即：阿尔法粒子。')
+    rst = parser.parse('中国的首都是北京。')
+    # print(rst)
 
 
 

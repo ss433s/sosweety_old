@@ -126,6 +126,11 @@ with open('./fake_database/Concept_relation_table') as concept_relation_table_fi
 class Knowledge_base(object):
     # def __init__(self):
 
+    # 查询concept word
+    def get_concept_word(self, concept_id):
+        word = concepts[concept_id].word
+        return word
+
     # 判定一个词语是否属于某种concept，不递归，多义词返回concept_id
     def word_belong_to_concept(self, word, concept_id):
         result = []
