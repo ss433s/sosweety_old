@@ -1,7 +1,7 @@
 # parse_str freq   type meaning
-NN	49034	s   -
+NN	9034	s   -
 NN	9034	q   -
-NN|VC|NN	13198   s   subj:0:1,obj:1:2
-NN|VV|NN	5088   s   subj:0:1,obj:1:2
+NN|VC|NN	13198   s   subj:0:1,dobj:1:2
+NN|VV|NN	5088   s   subj:0:1,dobj:1:2
 AP	13166   s   amod:0:?
 NTP|VV	12721   s   time:0:1

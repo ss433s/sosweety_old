@@ -34,6 +34,7 @@ class Word(object):
     def __init__(self, value, pos_tag, pos_tag2=None):
         self.value = value
         self.pos_tag = pos_tag
+        self.core_word = self.value
         if pos_tag2:
             self.pos_tag2 = pos_tag2
 
@@ -132,9 +133,10 @@ class Sub_sentence(object):
 
 
 class Pre_sub_sentence(object):
-    def __init__(self, value, ss_type=None):
+    def __init__(self, value, ss_type=None, raw_parse_result=None):
         self.value = value
         self.ss_type = ss_type
+        self.raw_parse_result = raw_parse_result
 
 
 # ###########################各种函数######################
@@ -219,8 +221,8 @@ def check_special_phrase(parse_result, final_results, N=0):
     # 替换phrase后在ss_pattern中
     for i in range(len(phrase_patterns)):
         phrase_pattern = phrase_patterns[i]
-        if i % 1000 == 0 and N < 2:
-            print(i, N)
+        # if i % 1000 == 0 and N < 2:
+        #     print(i, N)
         new_parse_results = find_single_special_pattern(parse_result, phrase_pattern)
         not_done.append(len(new_parse_results) == 0)
         for new_parse_result in new_parse_results:
@@ -328,8 +330,19 @@ def cal_score(structure, score=0):
         for relation in relations:
             relation = relation.split(':')
             if relation[0] == 'subj':
-                
-
+                if relation[1] != '?' and relation[2] != '?':
+                    subj = structure.contents[int(relation[1])].core_word
+                    verb = structure.contents[int(relation[2])].core_word
+                    nsubj = subj + '|' + verb
+                    if nsubj in nsubj_dict:
+                        score = score * nsubj_dict[nsubj]
+            if relation[0] == 'dobj':
+                if relation[1] != '?' and relation[2] != '?':
+                    verb = structure.contents[int(relation[1])].core_word
+                    obj = structure.contents[int(relation[2])].core_word
+                    dobj = obj + '|' + verb
+                    if dobj in dobj_dict:
+                        score = score * dobj_dict[dobj]
     return score
 
 
@@ -338,6 +351,16 @@ def cal_score(structure, score=0):
 ###################
 def parataxis_finder():
     return
+
+
+###################
+# extract k point
+###################
+def extract_kpoints(sub_sentence):
+    k_points = []
+    if sub_sentence.meaning != '-':
+        pass
+    return k_points
 
 
 ###################
@@ -405,19 +428,22 @@ KB = Knowledge_base()
 # sParser类 通用parser
 ###################
 class sParser(object):
-    def __init__(self, KB, mode='default'):
+    def __init__(self, KB, mode='default', current_environment=None):
         self.mode = mode
         self.KB = KB
+        self.current_environment = current_environment
 
     def parse(self, text):
 
-        result = []
+        result = {}
+        result['parse_results'] = []
+        result['k_points'] = []
 
         # 1，判定文本类型。对话/新闻稿/公告 等。可自动发现，自动学习
         # to do
 
         # 2，分句。
-        # to do
+        # to do 优化分句
         sentences = cut_sent(text)
 
         # 3，逐句parse
@@ -428,26 +454,34 @@ class sParser(object):
             sub_sentences = seg2sub_sentence(sentence)
 
             for sub_sentence in sub_sentences:
-                print(sub_sentence.value)
+                # print(sub_sentence.value)
                 if isinstance(sub_sentence, Pre_sub_sentence):
                     print(sub_sentence.value)
+                    # if self.mode == 'special1':  # 专门处理百度信息抽取预处理好的语料
+
                     parse_result = hanlp_parse(sub_sentence.value)
+                    sub_sentence.raw_parse_result = parse_result
 
-                    final_results = []
-                    check_special_phrase(parse_result, final_results)
-                    print(len(final_results))
-                    print(final_results[0])
-                    # break
+                    all_results = []
+                    check_special_phrase(parse_result, all_results)
 
-                    score = cal_score(final_results[5])
-                    print(score)
-
+                    # 返回所有results
                     if self.mode == 'default':
-                        continue
-
-                    result.append(final_results)
+                        ss_result = all_results
+                    # 返回最高分result
+                    if self.mode == 'learning':
+                        final_result_score = 0
+                        ss_result = []
+                        for parse_result in all_results:
+                            score = cal_score(parse_result)
+                            if score > final_result_score:
+                                ss_result = parse_result
+                        if ss_result == []:
+                            result['parse_results'].append(sub_sentence)  # 无解析结果返回原始的 Pre_sub_sentence
+                        else:
+                            result['parse_results'].append(ss_result)  # 有解析结果返回Sub_sentence
                 else:
-                    result.append(sub_sentence)
+                    result['parse_results'].append(sub_sentence)
 
         return result
 
@@ -461,9 +495,9 @@ if __name__ == '__main__':
                         required=False)
     args = parser.parse_args()
 
-    parser = sParser(KB)
+    parser = sParser(KB, mode='learning')
     rst = parser.parse('中国的首都是北京。')
-    # print(rst)
+    print(rst)
 
 
 
