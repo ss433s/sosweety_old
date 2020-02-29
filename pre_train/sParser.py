@@ -398,6 +398,26 @@ def jieba_parse(text):
 
 
 ###################
+# stanford parse
+###################
+def stanford_simplify(pos_tags):  # stanford 的postag 是列表，列表元素是（词，词性）的元组
+    stanford_simplify_dict = {}
+    with open('datasets/stanford_simplify') as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.strip().split('\t')
+            stanford_simplify_dict[line[0]] = line[1]
+    result = []
+    for word, pos_tag in pos_tags:
+        result.append((word, stanford_simplify_dict[pos_tag]))
+    return result
+
+
+def stanford_parse(text):
+    return
+
+
+###################
 # 读取短语库和句式库
 ###################
 # with open('./datasets/np_pattern') as np_file:
