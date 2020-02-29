@@ -1,8 +1,10 @@
 import json
-from ..sParser import find_single_special_pattern, Special_pattern, stanford_simplify
+# import sys
+# sys.path.append("..")
+from sParser import find_single_special_pattern, Special_pattern, Word, Parse_result, stanford_simplify
 
 
-with open('./datasets/new_test_file') as pattern_file:
+with open('datasets/new_test_file') as pattern_file:
     phrase_patterns = []
     lines = pattern_file.readlines()
     del(lines[0])
@@ -12,8 +14,8 @@ with open('./datasets/new_test_file') as pattern_file:
         pos_tags = []
         for feature in phrase_pattern.features:
             pos_tags.append(feature['pos_tag'])
-        phrase_pattern['symbol'] = '|'.join(pos_tags)
-        print(phrase_pattern)
+        phrase_pattern.symbol = '|'.join(pos_tags)
+        # print(phrase_pattern)
         phrase_patterns.append(phrase_pattern)
 
 
@@ -50,28 +52,32 @@ with open('init_data/parse_file_total') as parse_file:
 
             for phrase_pattern in phrase_patterns:
                 new_parse_result = find_single_special_pattern(parse_result, phrase_pattern)
-                if 'example' in phrase_pattern:
-                    if len(phrase_pattern['example']) < 5:
-                        phrase_pattern['example'].append(new_parse_result[0])
+                if len(new_parse_result) > 0:
+                    if phrase_pattern.examples:
+                        if len(phrase_pattern.examples) < 5:
+                            phrase_pattern.examples.append(new_parse_result[0])
+                    else:
+                        phrase_pattern.examples = [new_parse_result[0]]
+
+        get_enough_examples = [(phrase_pattern.examples is not None and len(phrase_pattern.examples) == 5) for phrase_pattern in phrase_patterns]
+        if all(get_enough_examples):
+            break
+
+
+with open('new_test_file2', 'w') as f:
+    heads = []
+    for k, _ in vars(phrase_patterns[0]).items():
+        heads.append(k)
+    heads_str = '#' + '\t'.join(heads)
+    f.write(heads_str + '\n')
+    for i in phrase_patterns:
+        value_list = []
+        for k, v in vars(phrase_patterns[i]).items():
+            if v is not None:
+                if isinstance(v, str):
+                    value_list.append(v)
                 else:
-                    phrase_pattern['example'] = [new_parse_result[0]]
-            if all_results == []:
-                print(sub_sentence)
+                    value_list.append(json.dumps(v, ensure_ascii=False))
             else:
-                print(all_results)
-
-
-
-with open('new_test_file', 'w') as new_test_file:
-    lines = new_test_file.readlines()
-    del(lines[0])
-    for line in lines:
-        line = line.strip().split()
-        pos_tags = line[1].split('|')
-        features = []
-        for pos_tag in pos_tags:
-            feature = {}
-            feature['pos_tag'] = pos_tag
-            features.append(feature)
-        phrase_pattern = [line[0], json.dumps(features, ensure_ascii=False), line[2], line[3], line[4]]
-        new_test_file.write('\t'.join(phrase_pattern) + '\n')
+                value_list.append('-')
+        f.write('\t'.join(value_list) + '\n')

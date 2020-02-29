@@ -25,7 +25,7 @@ class Parse_result(object):
         s = ""
         # s += "words: %s" % (self.words)
         # s += ", pos_tags: %s" % (self.pos_tags)
-        s += ", content: %s" % (self.contents)
+        s += "\"content: %s\"" % (self.contents)
         return s
 
 
@@ -51,23 +51,33 @@ class Word(object):
 
 # Special pattern和Phrase类 特殊短语
 class Special_pattern(object):
-    def __init__(self, phrase_type, features, freq, core_word_index, meaning):
+    def __init__(self, phrase_type, features, freq, core_word_index, meaning, symbol=None, examples=None):
         self.phrase_type = phrase_type
         self.pos_tag = self.phrase_type
         self.core_word_index = core_word_index
         self.features = json.loads(features)
         self.freq = float(freq)
         self.meaning = meaning
+        self.symbol = symbol
+        if examples:
+            self.examples = json.loads(examples)
+        else:
+            self.examples = None
 
     def __str__(self):
         return self.__repr__()
 
+    # def __setitem__(self, k, v):
+    #     self.k = v
+
     def __repr__(self):
         s = ""
-        s += ", features: %s" % (self.features)
+        s += "features: %s" % (self.features)
         s += ", phrase_type: %s" % (self.phrase_type)
         s += ", freq: %s" % (self.freq)
         s += ", meaning: %s" % (self.meaning)
+        s += ", symbol: %s" % (self.symbol)
+        s += ", examples: %s" % (self.examples)        
         return s
 
 
