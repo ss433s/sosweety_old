@@ -19,7 +19,8 @@ with open('init_data/parse_file_total') as parse_file:
 
         lines = parse_file.readlines()
 
-        for i in range(len(lines)):
+        # for i in range(len(lines)): 
+        for i in range(4, 5):
             print(i)
             if i % 1000 == 0:
                 print('parsed %s sentence, total ~170000' % i)

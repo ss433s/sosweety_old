@@ -51,7 +51,7 @@ class Word(object):
 
 # Special pattern和Phrase类 特殊短语
 class Special_pattern(object):
-    def __init__(self, phrase_type, features, freq, core_word_index, meaning, symbol=None, examples=None):
+    def __init__(self, phrase_type, pos_tag, core_word_index, features, freq, meaning, symbol=None, examples=None):
         self.phrase_type = phrase_type
         self.pos_tag = self.phrase_type
         self.core_word_index = core_word_index
@@ -231,8 +231,8 @@ def check_special_phrase(parse_result, final_results, N=0):
     # 替换phrase后在ss_pattern中
     for i in range(len(phrase_patterns)):
         phrase_pattern = phrase_patterns[i]
-        # if i % 1000 == 0 and N < 2:
-        #     print(i, N)
+        if i % 10 == 0:
+            print(i, N)
         new_parse_results = find_single_special_pattern(parse_result, phrase_pattern)
         not_done.append(len(new_parse_results) == 0)
         for new_parse_result in new_parse_results:
@@ -430,14 +430,23 @@ def stanford_parse(text):
 ###################
 # 读取短语库和句式库
 ###################
-# with open('./datasets/np_pattern') as np_file:
-with open('./datasets/new_test_file') as pattern_file:
+# old version
+# with open('./datasets/new_test_file') as pattern_file:
+#     phrase_patterns = []
+#     lines = pattern_file.readlines()
+#     del(lines[0])
+#     for line in lines:
+#         line = line.strip().split('\t')
+#         phrase_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4])
+#         phrase_patterns.append(phrase_pattern)
+
+with open('./datasets/new_test_file2') as pattern_file:
     phrase_patterns = []
     lines = pattern_file.readlines()
     del(lines[0])
     for line in lines:
         line = line.strip().split('\t')
-        phrase_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4])
+        phrase_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7])
         phrase_patterns.append(phrase_pattern)
 
 with open('./datasets/ss_pattern') as ss_file:

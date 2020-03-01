@@ -53,7 +53,7 @@ with open('init_data/parse_file_total') as parse_file:
             for phrase_pattern in phrase_patterns:
                 new_parse_result = find_single_special_pattern(parse_result, phrase_pattern)
                 if len(new_parse_result) > 0:
-                    tmp_str = 'sentence: ' + str(parse_result.words) + ' parse_str: ' + parse_result.parse_str
+                    tmp_str = 'sentence: ' + json.dumps(parse_result.words, ensure_ascii=False) + ' parse_str: ' + parse_result.parse_str
                     if phrase_pattern.examples:
                         if len(phrase_pattern.examples) < 5:
                             phrase_pattern.examples.append(tmp_str)
