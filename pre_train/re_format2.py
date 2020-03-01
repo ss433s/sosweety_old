@@ -53,26 +53,27 @@ with open('init_data/parse_file_total') as parse_file:
             for phrase_pattern in phrase_patterns:
                 new_parse_result = find_single_special_pattern(parse_result, phrase_pattern)
                 if len(new_parse_result) > 0:
+                    tmp_str = 'sentence: ' + str(parse_result.words) + ' parse_str: ' + parse_result.parse_str
                     if phrase_pattern.examples:
                         if len(phrase_pattern.examples) < 5:
-                            phrase_pattern.examples.append(new_parse_result[0])
+                            phrase_pattern.examples.append(tmp_str)
                     else:
-                        phrase_pattern.examples = [new_parse_result[0]]
+                        phrase_pattern.examples = [tmp_str]
 
         get_enough_examples = [(phrase_pattern.examples is not None and len(phrase_pattern.examples) == 5) for phrase_pattern in phrase_patterns]
         if all(get_enough_examples):
             break
 
 
-with open('new_test_file2', 'w') as f:
+with open('datasets/new_test_file2', 'w') as f:
     heads = []
     for k, _ in vars(phrase_patterns[0]).items():
         heads.append(k)
     heads_str = '#' + '\t'.join(heads)
     f.write(heads_str + '\n')
-    for i in phrase_patterns:
+    for phrase_pattern in phrase_patterns:
         value_list = []
-        for k, v in vars(phrase_patterns[i]).items():
+        for k, v in vars(phrase_pattern).items():
             if v is not None:
                 if isinstance(v, str):
                     value_list.append(v)

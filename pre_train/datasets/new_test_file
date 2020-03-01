@@ -15,7 +15,6 @@ NN	[{"pos_tag": "VV"}, {"pos_tag": "DEG"}, {"pos_tag": "NN"}]	1764	2	-
 NN	[{"pos_tag": "PN"}, {"pos_tag": "NN"}]	1756	1	-
 NN	[{"pos_tag": "JJ"}, {"pos_tag": "DEG"}, {"pos_tag": "NN"}]	1330	2	-
 NN	[{"pos_tag": "NN"}, {"pos_tag": "CC"}, {"pos_tag": "NN"}]	1083	-	-
-NN	[{"pos_tag": "NN"}, {"pos_tag": "VV"}, {"pos_tag": "DEC"}, {"pos_tag": "NN"}]	579	-	-
 JJ	[{"pos_tag": "JJ"}, {"pos_tag": "JJ"}]	575	-	-
 JJ	[{"pos_tag": "AD"}, {"pos_tag": "JJ"}]	575	-	-
 NN	[{"pos_tag": "NT"}, {"pos_tag": "DEG"}, {"pos_tag": "NN"}]	536	2	-
@@ -24,5 +23,3 @@ VV	[{"pos_tag": "AD"}, {"pos_tag": "VV"}]	477	-	-
 NN	[{"pos_tag": "OD"}, {"pos_tag": "M"}, {"pos_tag": "NN"}]	437	2	-
 NN	[{"pos_tag": "CD"}, {"pos_tag": "M"}, {"pos_tag": "DEG"}, {"pos_tag": "NN"}]	375	3	-
 NN	[{"pos_tag": "NN"}, {"pos_tag": "DEG"}]	350	-	-
-NN	[{"pos_tag": "NT"}, {"pos_tag": "VV"}, {"pos_tag": "DEC"}, {"pos_tag": "NN"}]	423	3	-
-NN	[{"pos_tag": "NT"}, {"pos_tag": "NN"}, {"pos_tag": "VV"}, {"pos_tag": "DEG"}, {"pos_tag": "NN"}]	1452	-	-
