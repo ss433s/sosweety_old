@@ -11,7 +11,7 @@ parser = sParser(KB, mode='learning')
 
 
 # 专门处理百度信息抽取预处理好的语料
-with open('init_data/parse_file_total') as parse_file:
+with open('init_data/123') as parse_file:
     with open('init_data/unsolved_ss', 'w') as unsolved_file:
 
         # 计时开始
@@ -20,7 +20,7 @@ with open('init_data/parse_file_total') as parse_file:
         lines = parse_file.readlines()
 
         # for i in range(len(lines)): 
-        for i in range(4, 5):
+        for i in range(1):
             print(i)
             if i % 1000 == 0:
                 print('parsed %s sentence, total ~170000' % i)
@@ -49,7 +49,11 @@ with open('init_data/parse_file_total') as parse_file:
                     word = Word(word_value, pos_tag)
                     contents.append(word)
                 parse_result = Parse_result(contents)
-                check_special_phrase(parse_result, all_results)
+                total_count = []
+                check_special_phrase(parse_result, all_results, total_count)
+                print(len(total_count))
+                print(sum(total_count))
+                print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
                 if all_results == []:
                     # print(sub_sentence)
                     unsolved_file.write(json.dumps(sub_sentence, ensure_ascii=False) + '\n')

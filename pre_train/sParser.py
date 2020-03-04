@@ -214,7 +214,7 @@ def seg2sub_sentence(sentence):
 # 构建所有可能的词组组合
 ###################
 # 先检测特殊短语
-def check_special_phrase(parse_result, final_results, N=0):
+def check_special_phrase(parse_result, final_results, total_count=[], N=0):
     # print('next')
     not_done = []
     # 自身就在ss_pattern中
@@ -231,10 +231,11 @@ def check_special_phrase(parse_result, final_results, N=0):
     # 替换phrase后在ss_pattern中
     for i in range(len(phrase_patterns)):
         phrase_pattern = phrase_patterns[i]
-        if i % 10 == 0:
-            print(i, N)
+        # if i % 10 == 0:
+        #     print(i, N)
         new_parse_results = find_single_special_pattern(parse_result, phrase_pattern)
         not_done.append(len(new_parse_results) == 0)
+        total_count.append(len(new_parse_results))
         for new_parse_result in new_parse_results:
             matched_ss_pattern = check_ss_pattern(new_parse_result)
             if len(matched_ss_pattern) > 0:
@@ -243,7 +244,9 @@ def check_special_phrase(parse_result, final_results, N=0):
                     if str(ss) not in final_results_str:
                         final_results.append(ss)
                         final_results_str.append(str(ss))
-            check_special_phrase(new_parse_result, final_results, N + 1)
+            # if N < 5:
+            if sum(total_count) < 30000:
+                check_special_phrase(new_parse_result, final_results, total_count, N + 1)
     if all(not_done):
         return
 
@@ -502,7 +505,8 @@ class sParser(object):
                     sub_sentence.raw_parse_result = parse_result
 
                     all_results = []
-                    check_special_phrase(parse_result, all_results)
+                    total_count = 0
+                    check_special_phrase(parse_result, all_results, total_count)
 
                     # 返回所有results
                     if self.mode == 'default':
