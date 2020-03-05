@@ -244,8 +244,8 @@ def check_special_phrase(parse_result, final_results, total_count=[], N=0):
                     if str(ss) not in final_results_str:
                         final_results.append(ss)
                         final_results_str.append(str(ss))
-            # if N < 5:
-            if sum(total_count) < 30000:
+            if N < 5:
+            # if sum(total_count) < 30000:
                 check_special_phrase(new_parse_result, final_results, total_count, N + 1)
     if all(not_done):
         return

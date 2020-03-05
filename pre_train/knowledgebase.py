@@ -15,7 +15,7 @@ class Concept(object):
 
 
 class Method(object):
-    def __init__(self, method_id, word, code):
+    def __init__(self, method_id, word, code='-'):
         self.method_id = method_id
         self.word = word
         self.code = code
@@ -93,21 +93,20 @@ with open('./fake_database/Fact_table') as fact_table_file:
                         fact.confidence = line[i]
             facts[fact_id] = fact
 
-# 读取Word表（词对应各种内部储存的表） 构建word2concept dict 和word2method dict
-with open('./fake_database/Word_table') as synonym_table_file:
-    word2concept_dict = {}
-    lines = synonym_table_file.readlines()
+# 读取Word表（词对应各种内部储存的表） 构建word2id dict
+# word 对应的是[id, type, freq]的列表
+with open('./fake_database/Word_table') as word_table_file:
+    word2id_dict = {}
+    lines = word_table_file.readlines()
     del(lines[0])
     for line in lines:
-        line = line.strip().split()
+        line = json.loads(line)
         if len(line) > 1:
-            if line[3] == 'concept':
-                if line[0] in word2concept_dict:
-                    word2concept_dict[line[0]].append([int(line[1]), float(line[4])])
-                else:
-                    word2concept_dict[line[0]] = [[int(line[1]), float(line[4])]]
-            elif line[3] == 'method':
-                pass
+            if line[0] in word2id_dict:
+                word2id_dict[line[0]].append([int(line[1]), line[2], int(line[3]), float(line[4])])
+            else:
+                word2id_dict[line[0]] = [[int(line[1]), line[2], int(line[3]), float(line[4])]]
+
 
 # 读取concept relation 表 构建concept_relation 字典  key为concept1_id 值为 [concept2_id, type]
 with open('./fake_database/Concept_relation_table') as concept_relation_table_file:
@@ -134,14 +133,14 @@ class Knowledge_base(object):
     # 判定一个词语是否属于某种concept，不递归，多义词返回concept_id
     def word_belong_to_concept(self, word, concept_id):
         result = []
-        if word in word2concept_dict:
-            concept_ids = word2concept_dict[word]
-            for concept1_id, confidence in concept_ids:
-                if concept1_id in concept_relations:
+        if word in word2id_dict:
+            word_ids = word2id_dict[word]
+            for concept1_id, word1_type, freq, confidence in word_ids:
+                if word1_type == 'concept' and concept1_id in concept_relations:
                     concept2s = concept_relations[concept1_id]
-                    for concept2_id, _ in concept2s:
-                        if concept2_id == concept_id:
-                            result.append([concept1_id, confidence])
+                    for concept2_id, word2_type, _, _ in concept2s:
+                        if word2_type == 'concept' and concept2_id == concept_id:
+                            result.append([concept1_id, freq, confidence])
         return result
 
     # fake database version

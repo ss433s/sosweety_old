@@ -1,0 +1,4 @@
+# word  concept_id  concept_word    Type    Confidence
+北京大学    2   北京大学    concept 0.9
+校长    4   校长    concept 0.95
+校长    5   王思聪  concept 0.03
