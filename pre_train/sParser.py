@@ -3,6 +3,7 @@ import re, json, argparse
 # import regex as re2
 import jieba
 import jieba.posseg
+import time
 from pyhanlp import HanLP
 import sys
 sys.path.append("..")
@@ -77,7 +78,7 @@ class Special_pattern(object):
         s += ", freq: %s" % (self.freq)
         s += ", meaning: %s" % (self.meaning)
         s += ", symbol: %s" % (self.symbol)
-        s += ", examples: %s" % (self.examples)        
+        s += ", examples: %s" % (self.examples)
         return s
 
 
@@ -214,7 +215,7 @@ def seg2sub_sentence(sentence):
 # 构建所有可能的词组组合
 ###################
 # 先检测特殊短语
-def check_special_phrase(parse_result, final_results, total_count=[], N=0):
+def check_special_phrase(parse_result, final_results, total_count=[], N=0, start_time=None):
     # print('next')
     not_done = []
     # 自身就在ss_pattern中
@@ -244,9 +245,10 @@ def check_special_phrase(parse_result, final_results, total_count=[], N=0):
                     if str(ss) not in final_results_str:
                         final_results.append(ss)
                         final_results_str.append(str(ss))
-            if N < 5:
+            # if N < 5:
             # if sum(total_count) < 30000:
-                check_special_phrase(new_parse_result, final_results, total_count, N + 1)
+            if start_time is not None and time.time() - start_time < 10:
+                check_special_phrase(new_parse_result, final_results, total_count, N + 1, start_time)
     if all(not_done):
         return
 
@@ -542,16 +544,7 @@ if __name__ == '__main__':
     rst = parser.parse('中国的首都是北京。')
     print(rst)
 
-
-
-
-
-
-
-
-
-
-
+'''
     # ################## old version #############
     ###################
     # 读取待处理语料，格式为每行一个数据，每个数据可以是多句话组成
@@ -597,3 +590,4 @@ if __name__ == '__main__':
         # break
         line = corpus.readline()
     corpus.close()
+'''

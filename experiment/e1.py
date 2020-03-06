@@ -4,6 +4,14 @@ print(len(d))
 
 
 
+import time
+start = time.time()
+print(start)
+time.sleep(10)
+end = time.time()
+print(end)
+print("Execution Time: ", end - start)
+
 
 class Point:
     def __init__(self, x, y):

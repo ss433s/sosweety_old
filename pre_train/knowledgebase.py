@@ -1,5 +1,6 @@
 import sys
 import json
+import ahocorasick
 sys.path.append("..")
 
 
@@ -142,6 +143,22 @@ class Knowledge_base(object):
                         if word2_type == 'concept' and concept2_id == concept_id:
                             result.append([concept1_id, freq, confidence])
         return result
+
+    # 检查所有词表,返回一段文字的匹配词列表
+    def checkout_words(self, text):
+        word_set = set()
+        matched_words = []
+        for word in word2id_dict:
+            word_set.add(word)
+
+        actree = ahocorasick.Automaton()
+        for word in word_set:
+            actree.add_word(word, word)
+        actree.make_automaton()
+        rst = actree.iter(text)
+        for actree_word in rst:
+            matched_words.append(actree_word[1])
+        return matched_words
 
     # fake database version
     def merge(self, k_points):
