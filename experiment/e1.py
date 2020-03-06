@@ -1,3 +1,10 @@
+d = {}
+d['123'] = 31
+print(len(d))
+
+
+
+
 class Point:
     def __init__(self, x, y):
         self.x = x

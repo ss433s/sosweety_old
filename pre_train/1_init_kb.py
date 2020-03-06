@@ -1,7 +1,7 @@
 import json
-import pandas as pd
-import numpy as np
-from sParser import hanlp_parse
+# import pandas as pd
+# import numpy as np
+# from sParser import hanlp_parse
 from knowledgebase import Concept, Method
 # from stanfordcorenlp import StanfordCoreNLP
 # nlp = StanfordCoreNLP(r'/Users/guoyu/Documents/supports/stanford-corenlp/stanford-corenlp-full-2018-10-05/', lang='zh')
@@ -18,10 +18,10 @@ methods = []
 method_words = []
 concept_dict = {}
 
-with open('./init_data/all_entities') as test_file:
+with open('./init_data/final_entities') as test_file:
     lines = test_file.readlines()
     for i in range(len(lines)):
-        line = lines[i].strip()
+        line = lines[i].strip('\n')
         concept = Concept(i, line, [], [])
         concept_dict[line] = concept
         concepts.append(concept)
@@ -31,7 +31,7 @@ with open('./init_data/all_entities') as test_file:
 with open('./datasets/nsubj_pr_stat') as nsubj_file:
     lines = nsubj_file.readlines()
     for i in range(len(lines)):
-        if i % 1000 == 0:
+        if i % 50000 == 0:
             print(i)
         line = lines[i].strip().split('\t')
         words = line[0].split('|')
@@ -120,21 +120,6 @@ with open('./fake_database/Word_table', 'w') as f:
     for method in methods:
         tmp_list = [method.word, method.method_id, 'method', 0, 0.9]
         f.write(json.dumps(tmp_list, ensure_ascii=False) + '\n')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # # 导入辞海数据
