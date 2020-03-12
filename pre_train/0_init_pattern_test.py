@@ -51,7 +51,7 @@ with open('init_data/parse_file_total') as parse_file:
                 all_results = []
                 total_count = []
                 start_time = time.time()
-                # check_special_phrase(parse_result, all_results, total_count=total_count, start_time=start_time)
+                check_special_phrase(parse_result, all_results, total_count=total_count, start_time=start_time)
                 # print(len(total_count))
                 # print(sum(total_count))
                 # print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))

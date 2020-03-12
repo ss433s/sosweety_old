@@ -8,3 +8,8 @@ init_data 中执行extract_know_entities.py 提取百度信息抽取数据中所
 1.2，init kb2
 利用百度信息抽取数据 更新Concept_relation_table
 
+1.3, init kb3
+cn pedia 和wiki relation 导入 项目外处理好的
+cn pedia 198万 wiki 46万  交集7万 重复数据3万
+
+1.4 Concept_relation_table 去重

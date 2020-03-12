@@ -95,7 +95,7 @@ with open('./fake_database/Fact_table') as fact_table_file:
             facts[fact_id] = fact
 
 # 读取Word表（词对应各种内部储存的表） 构建word2id dict
-# word 对应的是[id, type, freq]的列表
+# word 对应的是[id, type, freq, confidence]的列表
 with open('./fake_database/Word_table') as word_table_file:
     word2id_dict = {}
     lines = word_table_file.readlines()
