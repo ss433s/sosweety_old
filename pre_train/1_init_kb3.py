@@ -33,6 +33,7 @@ with open('./init_data/card_relation_uniq') as test_file:
 with open('./fake_database/Concept_relation_table') as f:
     lines = f.readlines()
 
+# todo 优化为set 速度太慢
 with open('./fake_database/Concept_relation_table', 'w') as f:
     new_lines = []
     for line in lines:

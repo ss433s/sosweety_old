@@ -1,25 +1,20 @@
-import json
+import json, time, sys
 # import pandas as pd
 # from stanfordcorenlp import StanfordCoreNLP
 # nlp = StanfordCoreNLP(r'/mnt/f/ubuntu/support/stanfordcorenlp/stanford-corenlp-full-2018-10-05/', lang='zh')
 from sParser import Word, Parse_result, check_special_phrase, stanford_simplify
-import time
 
 
 # 专门处理百度信息抽取预处理好的语料
-with open('init_data/parse_file_total') as parse_file:
-    with open('init_data/unsolved_ss', 'w') as unsolved_file:
-
-        # 计时开始
-        print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
-
+with open(sys.argv[1]) as parse_file:
+    with open(sys.argv[1] + '_unsolve_ss', 'w') as unsolved_file:
         lines = parse_file.readlines()
 
         total_ss = 0
         parsed_ss = 0
         for i in range(len(lines)):
         # for i in range(1):
-            if i % 1000 == 0:
+            if i % 200 == 0:
                 print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
                 print('parsed %s sentence, total ~170000' % i)
                 print('total ss is %s, parsed is %s' % (total_ss, parsed_ss))
@@ -56,8 +51,6 @@ with open('init_data/parse_file_total') as parse_file:
                 # print(sum(total_count))
                 # print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
                 if all_results == []:
-                    pass
-                    # print(sub_sentence)
                     unsolved_file.write(json.dumps(sub_sentence, ensure_ascii=False) + '\n')
                 else:
                     parsed_ss += 1
