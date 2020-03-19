@@ -6,3 +6,5 @@ NN|VV|NN	5088   s   subj:0:1,dobj:1:2
 JJ	13166   s   amod:0:?
 NT|VV	12721   s   time:0:1
 NN|CD|M	1272   s   time:0:1
+NN|VV	1272   s   time:0:1
+VV	1272   s   time:0:1

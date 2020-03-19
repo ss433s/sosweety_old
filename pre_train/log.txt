@@ -1,6 +1,6 @@
 0, init.sh
 init_data 中执行extract_know_entities.py 提取百度信息抽取数据中所有实体
-将主谓宾，百度百科，百度信息抽取中所有名词性实体合并为all_entities
+将主谓宾，百度百科(entities)，百度信息抽取中所有名词性实体合并为all_entities
 
 1.1, ini kb
 将all_entities导入为Concept，利用主谓关系更新Method——table和Concept的methods属性

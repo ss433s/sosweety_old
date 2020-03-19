@@ -3,6 +3,8 @@ import json
 import ahocorasick
 sys.path.append("..")
 
+database_version = './fake_database_empty'
+
 
 ###################
 # 定义和读取知识库
@@ -41,7 +43,7 @@ class Fact(object):
 
 
 # 读取concept表 concepts为字典 key为concept_id 值是Concept类
-with open('./fake_database/Concept_table') as concept_table_file:
+with open(database_version + '/Concept_table') as concept_table_file:
     concepts = {}
     lines = concept_table_file.readlines()
     del(lines[0])
@@ -52,7 +54,7 @@ with open('./fake_database/Concept_table') as concept_table_file:
             concepts[concept.concept_id] = concept
 
 # 读取method表 methods为字典 key为method_id 值是method类
-with open('./fake_database/Method_table') as method_table_file:
+with open(database_version + '/Method_table') as method_table_file:
     methods = {}
     lines = method_table_file.readlines()
     del(lines[0])
@@ -63,7 +65,7 @@ with open('./fake_database/Method_table') as method_table_file:
             methods[method.method_id] = method
 
 # 读取fact表 facts为字典 key为fact_id 值是fact类
-with open('./fake_database/Fact_table') as fact_table_file:
+with open(database_version + '/Fact_table') as fact_table_file:
     facts = {}
     lines = fact_table_file.readlines()
     del(lines[0])
@@ -96,7 +98,7 @@ with open('./fake_database/Fact_table') as fact_table_file:
 
 # 读取Word表（词对应各种内部储存的表） 构建word2id dict
 # word 对应的是[id, type, freq, confidence]的列表
-with open('./fake_database/Word_table') as word_table_file:
+with open(database_version + '/Word_table') as word_table_file:
     word2id_dict = {}
     lines = word_table_file.readlines()
     del(lines[0])
@@ -110,7 +112,7 @@ with open('./fake_database/Word_table') as word_table_file:
 
 
 # 读取concept relation 表 构建concept_relation 字典  key为concept1_id 值为 [concept2_id, type]
-with open('./fake_database/Concept_relation_table') as concept_relation_table_file:
+with open(database_version + '/Concept_relation_table') as concept_relation_table_file:
     concept_relations = {}
     lines = concept_relation_table_file.readlines()
     del(lines[0])
@@ -202,7 +204,7 @@ class Knowledge_base(object):
                 facts[fact.fact_id] = fact
 
         for file_pre, file_dict in update_list:
-            file_name = './fake_database/' + file_pre + '_table'
+            file_name = database_version + '/' + file_pre + '_table'
             # with open(file_name, 'r') as f:
             #     line1 = f.readline()
             with open(file_name, 'w') as f:

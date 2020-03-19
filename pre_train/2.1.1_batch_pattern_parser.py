@@ -3,11 +3,11 @@ from pathlib import Path
 import math
 
 
-ref_file = 'init_data/tt'
+ref_file = 'init_data/parse_file_total'
 tmp_path = 'init_data/process/batch_solve'
-python_script_name = '2.1.1_pattern_finder.py'
+python_script_name = '2.1.1_pattern_parser.py'
 python_location = '/home/guoyu9/anaconda3/envs/py36/bin/python'
-number = 10  # 批处理文件数
+number = 30  # 批处理文件数
 
 # 创建临时目录
 my_file = Path(tmp_path)

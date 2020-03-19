@@ -4,11 +4,12 @@ import re, json, argparse
 import jieba
 import jieba.posseg
 import time
+import ahocorasick
 from pyhanlp import HanLP
 import sys
 sys.path.append("..")
 # from utils import tuple_in_tuple, find_all_sub_list
-from knowledgebase import Knowledge_base
+from knowledgebase import Knowledge_base, concepts
 
 
 # parse result类
@@ -265,27 +266,86 @@ def find_single_special_pattern(parse_result, special_pattern):
         if list(feature.keys())[0] == 'word':
             if parse_result_content.value == feature['word']:
                 result = True
-        if list(feature.keys())[0] == 'special_symbol':
-            pass
         if list(feature.keys())[0] == 'pos_tag':
             if parse_result_content.pos_tag == feature['pos_tag']:
                 result = True
+
+        # 正则符合，需谨慎
+        if list(feature.keys())[0] == 'special_symbol':
+            if feature['special_symbol'] == '*':
+                result = True
+
         return result
 
     new_parse_results = []
     first_feature = special_pattern.features[0]
 
+    # for j in range(len(parse_result.pos_tags) - len(special_pattern.features) + 1):
+    #     if match_one_feature(parse_result.contents[j], first_feature):
+    #         i = 1
+    #         while len(parse_result.contents) > j + i and len(special_pattern.features) > i:
+    #             if match_one_feature(parse_result.contents[j + i], special_pattern.features[i]):
+    #                 i += 1
+    #                 continue
+    #             else:
+    #                 break
+
+    #         if i == len(special_pattern.features):
+    #             new_parse_result_contents = parse_result.contents[0:j]
+    #             contents = parse_result.contents[j: j + i]
+    #             special_phrase = Special_phrase(special_pattern, contents)
+    #             new_parse_result_contents.append(special_phrase)
+    #             if j + i < len(parse_result.contents):
+    #                 new_parse_result_contents += parse_result.contents[j + i: len(parse_result.contents)]
+    #             new_parse_result = Parse_result(new_parse_result_contents)
+    #             new_parse_results.append(new_parse_result)
+    # return new_parse_results
+
+    # 目前限制很多，只识别*且*至少一个,且*前后必须有非*
     for j in range(len(parse_result.pos_tags) - len(special_pattern.features) + 1):
         if match_one_feature(parse_result.contents[j], first_feature):
-            i = 1
-            while len(parse_result.contents) > j + i and len(special_pattern.features) > i:
-                if match_one_feature(parse_result.contents[j + i], special_pattern.features[i]):
-                    i += 1
-                    continue
-                else:
+            pattern_contain_special = False
+            for feature in special_pattern.features:
+                if 'special_symbol' in feature:
+                    pattern_contain_special = True
                     break
 
-            if i == len(special_pattern.features):
+            # 有*
+            if pattern_contain_special:
+                full_match = False
+                i = 1
+                while len(parse_result.contents) > j + i and len(special_pattern.features) > i:
+                    current_feature = special_pattern.features[i]
+                    if match_one_feature(parse_result.contents[j + i], current_feature):
+                        if 'special_symbol' in current_feature and current_feature['special_symbol'] == '*':
+                            next_feature = special_pattern.features[i+1]
+                            if match_one_feature(parse_result.contents[j + i + 1], next_feature):
+                                i += 1
+                                full_match = True
+                                break
+                            else:
+                                for k in range(1, len(parse_result.contents) - j - i):
+                                    if match_one_feature(parse_result.contents[j + i + k], next_feature):
+                                        i += k + 1
+                                        full_match = True
+                                        break
+                                if full_match:
+                                    break
+                        i += 1
+                    else:
+                        break
+            # 没有*
+            else:
+                i = 1
+                while len(parse_result.contents) > j + i and len(special_pattern.features) > i:
+                    if match_one_feature(parse_result.contents[j + i], special_pattern.features[i]):
+                        i += 1
+                        # continue
+                    else:
+                        break
+                full_match = i == len(special_pattern.features)
+
+            if full_match:
                 new_parse_result_contents = parse_result.contents[0:j]
                 contents = parse_result.contents[j: j + i]
                 special_phrase = Special_phrase(special_pattern, contents)
@@ -304,6 +364,25 @@ def check_ss_pattern(parse_result):
         if parse_result.parse_str == ss_pattern.parse_str:
             result.append(ss_pattern)
     return result
+
+
+###################
+# 检测已知实体
+# todo  到底有没有用？什么时候用 重分词再做？
+###################
+def check_known_concepts(parse_result):
+    # 构建所有实体的actree
+    actree = ahocorasick.Automaton()
+    for i in concepts:
+        concept = concepts[i]
+        word = concept.word
+        actree.add_word(word, word)
+    actree.make_automaton()
+
+    sentence = ''.join([item.value for item in parse_result.contents])
+    matched_concepts = actree.iter(sentence)
+
+    return matched_concepts
 
 
 ###################
@@ -507,7 +586,7 @@ class sParser(object):
                     sub_sentence.raw_parse_result = parse_result
 
                     all_results = []
-                    total_count = 0
+                    total_count = []
                     check_special_phrase(parse_result, all_results, total_count)
 
                     # 返回所有results
@@ -540,8 +619,11 @@ if __name__ == '__main__':
                         required=False)
     args = parser.parse_args()
 
+    # parse_result = hanlp_parse('中国的首都是北京。')
+    # check_known_concepts(parse_result)
+
     parser = sParser(KB, mode='learning')
-    rst = parser.parse('中国的首都是北京。')
+    rst = parser.parse('《中国的首都》是北京。')
     print(rst)
 
 '''
