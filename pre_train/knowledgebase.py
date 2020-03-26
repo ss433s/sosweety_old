@@ -4,6 +4,7 @@ import ahocorasick
 sys.path.append("..")
 
 database_version = './fake_database_empty'
+database_version = './fake_database'
 
 
 ###################
@@ -126,12 +127,35 @@ with open(database_version + '/Concept_relation_table') as concept_relation_tabl
 
 
 class Knowledge_base(object):
+
+    # 为了换sql版本 不存只封装函数和查询能力
     # def __init__(self):
+    #     self.concepts = concepts
+    #     self.methods = methods
+    #     self.facts = facts
+    #     self.word2id_dict = word2id_dict
+    #     self.concept_relations = concept_relations
 
     # 查询concept word
     def get_concept_word(self, concept_id):
         word = concepts[concept_id].word
         return word
+
+    # 查询一个词的所有对应id
+    def get_word_ids(self, word):
+        try:
+            word_ids = word2id_dict[word]
+            return word_ids
+        except Exception:
+            return []
+
+    # 查询一个concept id 所属于的concept
+    def get_concept_relations(self, concept_id):
+        try:
+            single_concept_relations = concept_relations[concept_id]
+            return single_concept_relations
+        except Exception:
+            return []
 
     # 判定一个词语是否属于某种concept，不递归，多义词返回concept_id
     def word_belong_to_concept(self, word, concept_id):

@@ -17,3 +17,6 @@ Concept_relation_table 去重
     2.1.1 迭代当前版本，筛选出unsolved ss
 
 2.2 phrase finder 用concept方案，减小阈值看有多少
+手工去除“的”的belong to Concept
+
+

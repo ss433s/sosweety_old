@@ -248,7 +248,7 @@ def check_special_phrase(parse_result, final_results, total_count=[], N=0, start
                         final_results_str.append(str(ss))
             # if N < 5:
             # if sum(total_count) < 30000:
-            if start_time is not None and time.time() - start_time < 10:
+            if start_time is not None and time.time() - start_time < 30:
                 check_special_phrase(new_parse_result, final_results, total_count, N + 1, start_time)
     if all(not_done):
         return
@@ -367,10 +367,56 @@ def check_ss_pattern(parse_result):
 
 
 ###################
-# 检测已知实体
+# 检测已知实体  其实是检测可以合并的实体 目前看0320
 # todo  到底有没有用？什么时候用 重分词再做？
+# 返回当前分词条件下可以组合出的实体合并后的全部parse_result
+# 与kb中的checkout_words 功能有重叠
 ###################
 def check_known_concepts(parse_result):
+    # 构建所有实体的actree
+    actree = ahocorasick.Automaton()
+    for i in concepts:
+        concept = concepts[i]
+        word = concept.word
+        actree.add_word(word, word)
+    actree.make_automaton()
+
+    sentence = ''.join([item.value for item in parse_result.contents])
+    matched_concepts = actree.iter(sentence)
+
+    new_parse_results = []
+    for i in range(len(parse_result.contents)):
+        item = parse_result.contents[i]
+        for matched_concept in matched_concepts:
+            word = matched_concept[1]
+
+            # 组合后是否还是concept
+            if len(item.value) < len(word) and item.value == word[0:len(item.value)] and i+1 < len(parse_result.contents):
+                all_value = item.value
+                for j in range(i + 1, len(parse_result.contents)):
+                    next_item = parse_result.contents[i+j]
+                    all_value += next_item.value
+                    if all_value == word:
+                        new_parse_result_contents = parse_result.contents[0:i]
+                        concept_word = Word(word, 'NN')
+                        new_parse_result_contents.append(concept_word)
+                        if j + i + 1 < len(parse_result.contents):
+                            new_parse_result_contents += parse_result.contents[j + i + 1: len(parse_result.contents)]
+                        new_parse_result = Parse_result(new_parse_result_contents)
+                        new_parse_results.append(new_parse_result)
+                        break
+                    elif len(all_value) > len(word):
+                        break
+
+    return new_parse_results
+
+
+###################
+# 重分词
+# 检测已知实体
+# todo  重分词时识别所有潜在实体
+###################
+def check_known_concepts2(parse_result):
     # 构建所有实体的actree
     actree = ahocorasick.Automaton()
     for i in concepts:
@@ -619,11 +665,11 @@ if __name__ == '__main__':
                         required=False)
     args = parser.parse_args()
 
-    # parse_result = hanlp_parse('中国的首都是北京。')
-    # check_known_concepts(parse_result)
+    parse_result = hanlp_parse('纵横中文网。')
+    check_known_concepts(parse_result)
 
     parser = sParser(KB, mode='learning')
-    rst = parser.parse('《中国的首都》是北京。')
+    rst = parser.parse('北京（中国的首都）是北京。')
     print(rst)
 
 '''
