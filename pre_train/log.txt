@@ -15,6 +15,7 @@ Concept_relation_table 去重
 
 2.1 phrase finder 用原方案，先看下能检测到多少
     2.1.1 迭代当前版本，筛选出unsolved ss
+    2.1.2 词性级别phrase，句式发现（可能仅全新初始化的时候需要）
 
 2.2 phrase finder 用concept方案，减小阈值看有多少
 手工去除“的”的belong to Concept

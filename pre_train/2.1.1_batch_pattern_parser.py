@@ -3,11 +3,13 @@ from pathlib import Path
 import math
 
 
-ref_file = 'init_data/parse_file_total'
+ref_file = 'init_data/process/unsolve_ss4th'
+# ref_file = 'init_data/process/10line'
 tmp_path = 'init_data/process/batch_solve'
 python_script_name = '2.1.1_pattern_parser.py'
 python_location = '/home/guoyu9/anaconda3/envs/py36/bin/python'
 number = 30  # 批处理文件数
+mode = 2  # 1 处理百度语料的预处理后数据 2 处理普通sub sentence tuple
 
 # 创建临时目录
 my_file = Path(tmp_path)
@@ -31,6 +33,6 @@ with open(ref_file) as f:
                 f2.write(lines[j])
 
 for i in range(number):
-    cmd = python_location + ' ' + python_script_name + ' ' + tmp_file_name_prefix + str(i+1) + ' >' + tmp_file_name_prefix + str(i+1) + '.log'
+    cmd = python_location + ' ' + python_script_name + ' ' + tmp_file_name_prefix + str(i+1) + ' ' + str(mode) + ' >' + tmp_file_name_prefix + str(i+1) + '.log'
     fd = os.popen(cmd)
     # output = fd.read()

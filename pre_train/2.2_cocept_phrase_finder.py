@@ -1,5 +1,5 @@
 import json
-# import pandas as pd
+import pandas as pd
 from sParser import Word, Parse_result, stanford_simplify, KB
 
 
@@ -114,18 +114,23 @@ with open('./init_data/all_concept_phrases', 'w') as f:
         f.write(json.dumps(i, ensure_ascii=False) + '\n')
 
 
-# pandas排序去重，超级慢，不如awk
+# pandas排序去重，不能是json，直接读字符串就行, 写csv速度更快
 # with open('./init_data/123') as f:
-# with open('./init_data/all_concept_phrases') as f:
-#     total_concept_phrase = []
-#     lines = f.readlines()
-#     for line in lines:
-#         line = line.strip()
-#         concept_phrase = json.loads(line)
-#         total_concept_phrase.append(concept_phrase)
+with open('./init_data/all_concept_phrases') as f:
+    total_concept_phrase = []
+    lines = f.readlines()
+    for line in lines:
+        line = line.strip()
+        # concept_phrase = json.loads(line)
+        total_concept_phrase.append(line)
 
-#     df_dict = {}
-#     df_dict['concept_phrase'] = total_concept_phrase
-#     df = pd.DataFrame(df_dict)
-#     df2 = df.concept_phrase.value_counts()
-#     df2.to_csv('./init_data/123stat.csv')
+    df_dict = {}
+    df_dict['concept_phrase'] = total_concept_phrase
+    df = pd.DataFrame(df_dict)
+    df2 = df.concept_phrase.value_counts()
+    df3_dict = {'label': df2.index, 'count': df2.values}
+    df3 = pd.DataFrame(df3_dict)
+    with open('./init_data/all_concept_phrases_stat', 'w') as result_file:
+        for i in range(len(df3)):
+            result_file.write(df3['label'][i] + '\t' + str(df3['count'][i]) + '\n')
+    # df2.to_csv('./init_data/123stat.csv')
