@@ -2,8 +2,7 @@ import sys, time
 #import pandas as pd
 import json
 from stanfordcorenlp import StanfordCoreNLP
-nlp = StanfordCoreNLP(
-    r'/DATA/disk1/guoyu9/setups/stanford-corenlp-full-2018-10-05/', lang='zh')
+nlp = StanfordCoreNLP(r'/DATA/disk1/guoyu9/setups/stanford-corenlp-full-2018-10-05/', lang='zh')
 from pyhanlp import *
 import os
 from pyltp import Segmentor

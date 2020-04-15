@@ -43,3 +43,6 @@ NN	NN	-	[{"pos_tag": "NN"}, {"pos_tag": "LC"}, {"pos_tag": "DEG"}, {"pos_tag": "
 VV	VV	-	[{"pos_tag": "VC"}]	350.0	-	VC	[]
 VV	VV	-	[{"pos_tag": "VV"}, {"pos_tag": "AS"}]	350.0	-	VV|AS	[]
 NN	NN	-	[{"pos_tag": "NN"}, {"pos_tag": "ETC"}]	350.0	-	NN|ETC	[]
+JJ	JJ	-	[{"pos_tag": "VA"}]	350.0	-	VA	[]
+VV	VV	-	[{"pos_tag": "VE"}]	350.0	-	VE	[]
+NN	NN	-	[{"pos_tag": "SP"}]	350.0	-	SP	[]

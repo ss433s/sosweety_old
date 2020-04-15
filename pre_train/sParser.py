@@ -136,11 +136,22 @@ class Sub_sentence(object):
 
     def __repr__(self):
         s = ""
-        s += "parse_str: %s" % (self.parse_str)
-        s += ", ss_type: %s" % (self.ss_type)
-        s += ", freq: %s" % (self.freq)
-        s += ", meaning: %s" % (self.meaning)
-        s += ", contents: %s" % (self.contents)
+        s += "parse_str: %s,\n" % (self.parse_str)
+        s += "ss_type: %s,\n" % (self.ss_type)
+        s += "freq: %s,\n" % (self.freq)
+        s += "meaning: %s,\n" % (self.meaning)
+
+        level_dict = {}
+        level = 0
+        has_phrase = True
+        while has_phrase:
+            for item in self.contents:
+                if isinstance(item, Word):
+                    print(item.value)
+                else:
+                    
+                    level += 1
+        s += "contents: %s" % (self.contents)
         return s
 
 
@@ -325,7 +336,7 @@ def find_single_special_pattern(parse_result, special_pattern):
                         if 'special_symbol' in current_feature and current_feature['special_symbol'] == '*':
                             next_feature = special_pattern.features[i+1]
                             if match_one_feature(parse_result.contents[j + i + 1], next_feature):
-                                i += 1
+                                i += 2
                                 full_match = True
                                 break
                             else:

@@ -1,6 +1,6 @@
 import json
 import pandas as pd
-from sParser import Word, Parse_result, stanford_simplify, KB
+from sParser import Word, Parse_result, stanford_simplify, KB, phrase_patterns
 
 
 ###################
@@ -13,6 +13,12 @@ unsolvable_ss_file = open(file)
 
 # 开始finder 定义参数
 cutoff = 1000
+
+
+# phrase str提取
+phrase_strs = []
+for phrase_pattern in phrase_patterns:
+    phrase_strs.append(phrase_pattern.symbol)
 
 
 # parse result构建
@@ -53,35 +59,39 @@ def checkout_concept_phrase(parse_result):
         item = parse_result.contents[i]
         next_item = parse_result.contents[i+1]
         item_concept_phrases = []
-        word_relations = get_word_relations(item.value)
-        if len(word_relations) > 0:
-            next_word_relations = get_word_relations(next_item.value)
-            for word_relation in word_relations:
-                feature1 = create_feature(word_relation)
-                for next_word_relation in next_word_relations:
-                    feature2 = create_feature(next_word_relation)
-                    # concept_phrase = [feature1, feature2, item.value, next_item.value]
-                    concept_phrase = [feature1, feature2]
-                    item_concept_phrases.append(concept_phrase)
-                feature2 = {}
-                feature2['word'] = next_item.value
-                # item_concept_phrases.append([feature1, feature2, item.value, next_item.value])
-                item_concept_phrases.append([feature1, feature2])
+        phrase_str = '|'.join([item.pos_tag, next_item.pos_tag])
+        if phrase_str in phrase_strs:
+            word_relations = get_word_relations(item.value)
+            if len(word_relations) > 0:
+                next_word_relations = get_word_relations(next_item.value)
+                for word_relation in word_relations:
+                    feature1 = create_feature(word_relation)
+                    for next_word_relation in next_word_relations:
+                        feature2 = create_feature(next_word_relation)
+                        # concept_phrase = [feature1, feature2, item.value, next_item.value]
+                        concept_phrase = [feature1, feature2]
+                        item_concept_phrases.append(concept_phrase)
+                    feature2 = {}
+                    feature2['word'] = next_item.value
+                    # item_concept_phrases.append([feature1, feature2, item.value, next_item.value])
+                    item_concept_phrases.append([feature1, feature2])
         if i < len(parse_result.contents) - 2:
             item_concept_phrases3 = []
             next_next_item = parse_result.contents[i+2]
-            next_next_word_relations = get_word_relations(next_next_item.value)
-            for concept_phrase in item_concept_phrases:
-                for word_relation in next_next_word_relations:
-                    feature3 = create_feature(word_relation)
-                    # concept_phrase3 = concept_phrase + [feature3, next_next_item.value]
-                    concept_phrase3 = concept_phrase + [feature3]
-                    item_concept_phrases3.append(concept_phrase3)
-                feature3 = {}
-                feature3['word'] = next_next_item.value
-                # item_concept_phrases3.append(concept_phrase + [feature3, next_next_item.value])
-                item_concept_phrases3.append(concept_phrase + [feature3])
-            item_concept_phrases += item_concept_phrases3
+            phrase_str = '|'.join([item.pos_tag, next_item.pos_tag, next_next_item.pos_tag])
+            if phrase_str in phrase_strs:
+                next_next_word_relations = get_word_relations(next_next_item.value)
+                for concept_phrase in item_concept_phrases:
+                    for word_relation in next_next_word_relations:
+                        feature3 = create_feature(word_relation)
+                        # concept_phrase3 = concept_phrase + [feature3, next_next_item.value]
+                        concept_phrase3 = concept_phrase + [feature3]
+                        item_concept_phrases3.append(concept_phrase3)
+                    feature3 = {}
+                    feature3['word'] = next_next_item.value
+                    # item_concept_phrases3.append(concept_phrase + [feature3, next_next_item.value])
+                    item_concept_phrases3.append(concept_phrase + [feature3])
+                item_concept_phrases += item_concept_phrases3
         concept_phrases += item_concept_phrases
 
     return concept_phrases

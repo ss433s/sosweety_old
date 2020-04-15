@@ -20,4 +20,6 @@ Concept_relation_table 去重
 2.2 phrase finder 用concept方案，减小阈值看有多少
 手工去除“的”的belong to Concept
 
+2.3 固定组合词发现
+
 
