@@ -2,7 +2,9 @@ d = {}
 d['123'] = 31
 print(len(d))
 
-
+a = 21.50005
+b = round(None, 1)
+print(b)
 
 import time
 start = time.time()
