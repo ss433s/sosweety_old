@@ -3,7 +3,7 @@ from pathlib import Path
 import math
 
 
-ref_file = 'init_data/process/unsolve_ss4th'
+ref_file = 'init_data/process/unsolve_ss5th'
 # ref_file = 'init_data/process/10line'
 tmp_path = 'init_data/process/batch_solve'
 python_script_name = '2.1.1_pattern_parser.py'
