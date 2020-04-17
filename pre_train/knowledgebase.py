@@ -4,7 +4,7 @@ import ahocorasick
 sys.path.append("..")
 
 database_version = './fake_database_empty'
-database_version = './fake_database'
+# database_version = './fake_database'
 
 
 ###################

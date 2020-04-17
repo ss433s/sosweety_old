@@ -1,7 +1,6 @@
 __pycache__
 .idea
 *.json
-corpus/
 init_data/
 fake_database/
 !.vscode/launch.json

@@ -12,6 +12,18 @@
             "args": [],
             "console": "internalConsole",
             "cwd": "${fileDirname}"
+        },
+        {
+            "name": "param test",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "init_data/process/batch_solve/tt10003", "2"
+            ],
+            "console": "internalConsole",
+            "cwd": "${fileDirname}"
         }
     ]
+    
 }

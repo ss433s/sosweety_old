@@ -43,14 +43,14 @@ if hasattr(p1, 'x'):
     print(getattr(p1, 'xx', 2000))
 
 if not hasattr(Point, 'add'):
-    setattr(Point, 'add', lambda self,other: Point(self.x + other.x, self.y + other.y))
+    setattr(Point, 'add', lambda self, other: Point(self.x + other.x, self.y + other.y))
 
 print(Point.add)
 print(p1.add)
 print(p1.add(p2))
 
 if not hasattr(p1, 'sub'):
-    setattr(p1, 'sub', lambda self,other: Point(self.x - other.x, self.y - other.y))
+    setattr(p1, 'sub', lambda self, other: Point(self.x - other.x, self.y - other.y))
 
 print(p1.sub)
 print(p1.sub(p1, p2))

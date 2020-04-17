@@ -141,16 +141,16 @@ class Sub_sentence(object):
         s += "freq: %s,\n" % (self.freq)
         s += "meaning: %s,\n" % (self.meaning)
 
-        level_dict = {}
-        level = 0
-        has_phrase = True
-        while has_phrase:
-            for item in self.contents:
-                if isinstance(item, Word):
-                    print(item.value)
-                else:
+        # level_dict = {}
+        # level = 0
+        # has_phrase = True
+        # while has_phrase:
+        #     for item in self.contents:
+        #         if isinstance(item, Word):
+        #             print(item.value)
+        #         else:
                     
-                    level += 1
+        #             level += 1
         s += "contents: %s" % (self.contents)
         return s
 

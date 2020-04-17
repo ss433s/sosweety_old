@@ -7,7 +7,7 @@ ref_file = 'init_data/process/unsolve_ss5th'
 # ref_file = 'init_data/process/10line'
 tmp_path = 'init_data/process/batch_solve'
 python_script_name = '2.1.1_pattern_parser.py'
-python_location = '/home/guoyu9/anaconda3/envs/py36/bin/python'
+python_location = '/home/guoyu9/miniconda3/envs/ss36/bin/python'
 number = 30  # 批处理文件数
 mode = 2  # 1 处理百度语料的预处理后数据 2 处理普通sub sentence tuple
 
