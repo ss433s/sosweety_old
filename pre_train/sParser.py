@@ -135,23 +135,70 @@ class Sub_sentence(object):
         return self.__repr__()
 
     def __repr__(self):
-        s = ""
+        s = "\n"
         s += "parse_str: %s,\n" % (self.parse_str)
         s += "ss_type: %s,\n" % (self.ss_type)
         s += "freq: %s,\n" % (self.freq)
         s += "meaning: %s,\n" % (self.meaning)
 
-        # level_dict = {}
-        # level = 0
-        # has_phrase = True
-        # while has_phrase:
-        #     for item in self.contents:
-        #         if isinstance(item, Word):
-        #             print(item.value)
-        #         else:
-                    
-        #             level += 1
-        s += "contents: %s" % (self.contents)
+#         def iter_one_level(contents):
+#             has_phrase = False
+#             value_list = []
+#             phrase_list = []
+#             for item in contents:
+#                 value_list.append(item.value)
+#                 if not isinstance(item, Word):
+#                     has_phrase = True
+#                     phrase_list.append(item)
+#             print('     '.join(value_list))
+#             return has_phrase, phrase_list, value_list
+
+#         level_maxtrix = {}
+#         level = 0
+#         seq = 0
+#         matrix_x = 0
+#         matrix_y = 0
+#         has_phrase = True
+#         contents = self.contents
+#         bottom_level_x = [i for i in range(len(contents))]
+#         level_maxtrix.append(bottom_level_x)
+#         while has_phrase:
+#             this_level_x = level_maxtrix[level]
+#             for i in range(len(contents)):
+#                 item = contents[i]
+#                 if not isinstance(item, Word):
+#                     this_level_x[i] += len(contents)/2 - 0.5
+#                     if i < len(contents):
+#                         for j in range(i+1, len(contents)):
+#                             this_level_x[j] += len(item)
+
+#             this_level_has_phrase, this_level_phrase_list, this_level_value_list = iter_one_level(contents)
+#             level_maxtrix[level] = this_level_value_list
+#             level += 1
+#             if this_level_has_phrase:
+#                 for contents in this_level_phrase_list:
+
+        level_list = []
+        has_phrase = True
+        contents_list = [self.contents]
+        while has_phrase:
+            this_level_value_list = []
+            next_level_content_list = []
+            has_not_phrase_list = []
+            for contents in contents_list:
+                contents_has_not_phrase = all([isinstance(item, Word) for item in contents])
+                has_not_phrase_list.append(contents_has_not_phrase)
+                this_level_value_list += [item.value for item in contents]
+                for item in contents:
+                    if not isinstance(item, Word):
+                        next_level_content_list.append(item.contents)
+            level_list.append(this_level_value_list)
+            contents_list = next_level_content_list
+            has_phrase = not all(has_not_phrase_list)
+
+        s += "contents: \n"
+        for level in range(len(level_list)-1, -1, -1):
+            s += json.dumps(level_list[level], ensure_ascii=False) + '\n'
         return s
 
 
@@ -265,6 +312,10 @@ def check_special_phrase(parse_result, final_results, mode='default', N=0, start
                 break
             # if N < 5:
             if start_time is not None and time.time() - start_time < 60:
+                check_special_phrase(new_parse_result, final_results, mode, N + 1, start_time)
+
+            # 不给start time就无限找下去
+            if start_time is None:
                 check_special_phrase(new_parse_result, final_results, mode, N + 1, start_time)
     if all(not_done):
         return
@@ -680,11 +731,14 @@ if __name__ == '__main__':
                         required=False)
     args = parser.parse_args()
 
-    parse_result = hanlp_parse('纵横中文网。')
-    check_known_concepts(parse_result)
+    # parse_result = hanlp_parse('纵横中文网。')
+    # check_known_concepts(parse_result)
+
+    text = '北京（中国的首都）是北京。'
+    text = '宝马和奔驰联合开发无人驾驶技术'
 
     parser = sParser(KB, mode='learning')
-    rst = parser.parse('北京（中国的首都）是北京。')
+    rst = parser.parse(text)
     print(rst)
 
 '''
