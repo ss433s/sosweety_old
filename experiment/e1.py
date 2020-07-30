@@ -1,3 +1,24 @@
+d = [0] * 5
+print(d)
+d[2] =2
+
+d = {}
+d['123'] = 31
+print(len(d))
+
+a = 21.50005
+b = round(None, 1)
+print(b)
+
+import time
+start = time.time()
+print(start)
+time.sleep(10)
+end = time.time()
+print(end)
+print("Execution Time: ", end - start)
+
+
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -26,14 +47,14 @@ if hasattr(p1, 'x'):
     print(getattr(p1, 'xx', 2000))
 
 if not hasattr(Point, 'add'):
-    setattr(Point, 'add', lambda self,other: Point(self.x + other.x, self.y + other.y))
+    setattr(Point, 'add', lambda self, other: Point(self.x + other.x, self.y + other.y))
 
 print(Point.add)
 print(p1.add)
 print(p1.add(p2))
 
 if not hasattr(p1, 'sub'):
-    setattr(p1, 'sub', lambda self,other: Point(self.x - other.x, self.y - other.y))
+    setattr(p1, 'sub', lambda self, other: Point(self.x - other.x, self.y - other.y))
 
 print(p1.sub)
 print(p1.sub(p1, p2))

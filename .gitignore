@@ -1,9 +1,7 @@
 __pycache__
 .idea
 *.json
-*.p
-*.res
-corpus/
-model/
 init_data/
+fake_database/
 !.vscode/launch.json
+*.DS_Store
