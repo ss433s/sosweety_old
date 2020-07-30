@@ -25,13 +25,10 @@ def prepare_sequence(seq, to_ix):
 def log_sum_exp(vec):  # vec是1*5, type是Variable
 
     max_score = vec[0, argmax(vec)]
-    #max_score维度是１，　max_score.view(1,-1)维度是１＊１，max_score.view(1, -1).expand(1, vec.size()[1])的维度是１＊５
-    max_score_broadcast = max_score.view(1, -1).expand(
-        
-        1,
-        vec.size()[1])  # vec.size()维度是1*5
-    return max_score + torch.log(
-        torch.sum(torch.exp(vec - max_score_broadcast)))  #为什么指数之后再求和，而后才log呢
+    # max_score维度是１，　max_score.view(1,-1)维度是１＊１，max_score.view(1, -1).expand(1, vec.size()[1])的维度是１＊５
+    max_score_broadcast = max_score.view(1, -1).expand(1, vec.size()[1])  # vec.size()维度是1*5
+
+    return max_score + torch.log(torch.sum(torch.exp(vec - max_score_broadcast)))  # 为什么指数之后再求和，而后才log呢
 
 
 class BiLSTM_CRF(nn.Module):
@@ -69,67 +66,62 @@ class BiLSTM_CRF(nn.Module):
         return (autograd.Variable(torch.randn(2, 1, self.hidden_dim // 2)),
                 autograd.Variable(torch.randn(2, 1, self.hidden_dim // 2)))
 
-    #预测序列的得分
+    # 预测序列的得分
     def _forward_alg(self, feats):
         # Do the forward algorithm to compute the partition function
-        init_alphas = torch.Tensor(1, self.tagset_size).fill_(
-            -10000.)  #1*5 而且全是-10000
+        init_alphas = torch.Tensor(1, self.tagset_size).fill_(-10000.)  # 1*5 而且全是-10000
 
         # START_TAG has all of the score.
-        init_alphas[0][self.tag_to_ix[
-            START_TAG]] = 0.  #因为start tag是4，所以tensor([[-10000., -10000., -10000.,      0., -10000.]])，将start的值为零，表示开始进行网络的传播，
+        # 因为start tag是4，所以tensor([[-10000., -10000., -10000.,      0., -10000.]])，将start的值为零，表示开始进行网络的传播，
+        init_alphas[0][self.tag_to_ix[START_TAG]] = 0.
 
         # Wrap in a variable so that we will get automatic backprop
-        forward_var = autograd.Variable(
-            init_alphas)  #初始状态的forward_var，随着step t变化
+        forward_var = autograd.Variable(init_alphas)  # 初始状态的forward_var，随着step t变化
 
         # Iterate through the sentence 会迭代feats的行数次，
-        for feat in feats:  #feat的维度是５ 依次把每一行取出来~
+        for feat in feats:  # feat的维度是５ 依次把每一行取出来~
             alphas_t = []  # The forward variables at this timestep
-            for next_tag in range(self.tagset_size):  #next tag 就是简单 i，从0到len
+            for next_tag in range(self.tagset_size):  # next tag 就是简单 i，从0到len
                 # broadcast the emission score: it is the same regardless of
                 # the previous tag
-                emit_score = feat[next_tag].view(1, -1).expand(
-                    1, self.tagset_size
-                )  #维度是1*5 噢噢！原来，LSTM后的那个矩阵，就被当做是emit score了
+                emit_score = feat[next_tag].view(1, -1).expand(1, self.tagset_size)  # 维度是1*5 噢噢！原来，LSTM后的那个矩阵，就被当做是emit score了
 
                 # the ith entry of trans_score is the score of transitioning to
                 # next_tag from i
-                trans_score = self.transitions[next_tag].view(1, -1)  #维度是１＊５
+                trans_score = self.transitions[next_tag].view(1, -1)  # 维度是１＊５
+
                 # The ith entry of next_tag_var is the value for the
                 # edge (i -> next_tag) before we do log-sum-exp
-                #第一次迭代时理解：
+                # 第一次迭代时理解：
                 # trans_score所有其他标签到Ｂ标签的概率
                 # 由lstm运行进入隐层再到输出层得到标签Ｂ的概率，emit_score维度是１＊５，5个值是相同的
                 next_tag_var = forward_var + trans_score + emit_score
                 # The forward variable for this tag is log-sum-exp of all the
                 # scores.
                 alphas_t.append(log_sum_exp(next_tag_var).unsqueeze(0))
-            #此时的alphas t 是一个长度为5，例如<class 'list'>: [tensor(0.8259), tensor(2.1739), tensor(1.3526), tensor(-9999.7168), tensor(-0.7102)]
-            forward_var = torch.cat(alphas_t).view(1,
-                                                   -1)  #到第（t-1）step时５个标签的各自分数
-        terminal_var = forward_var + self.transitions[self.tag_to_ix[
-            STOP_TAG]]  #最后只将最后一个单词的forward var与转移 stop tag的概率相加 tensor([[   21.1036,    18.8673,    20.7906, -9982.2734, -9980.3135]])
-        alpha = log_sum_exp(terminal_var)  #alpha是一个0维的tensor
+            # 此时的alphas t 是一个长度为5，例如<class 'list'>: [tensor(0.8259), tensor(2.1739), tensor(1.3526), tensor(-9999.7168), tensor(-0.7102)]
+            forward_var = torch.cat(alphas_t).view(1, -1)  # 到第（t-1）step时５个标签的各自分数
+        terminal_var = forward_var + self.transitions[self.tag_to_ix[STOP_TAG]]  # 最后只将最后一个单词的forward var与转移 stop tag的概率相加 tensor([[   21.1036,    18.8673,    20.7906, -9982.2734, -9980.3135]])
+        alpha = log_sum_exp(terminal_var)  # alpha是一个0维的tensor
 
         return alpha
 
-    #得到feats
+    # 得到feats
     def _get_lstm_features(self, sentence):
         self.hidden = self.init_hidden()
-        #embeds = self.word_embeds(sentence).view(len(sentence), 1, -1)
+        # embeds = self.word_embeds(sentence).view(len(sentence), 1, -1)
         embeds = self.word_embeds(sentence)
 
         embeds = embeds.unsqueeze(1)
 
-        lstm_out, self.hidden = self.lstm(embeds, self.hidden)  #11*1*4
-        lstm_out = lstm_out.view(len(sentence), self.hidden_dim)  #11*4
+        lstm_out, self.hidden = self.lstm(embeds, self.hidden)  # 11*1*4
+        lstm_out = lstm_out.view(len(sentence), self.hidden_dim)  # 11*4
 
-        lstm_feats = self.hidden2tag(lstm_out)  #11*5 is a linear layer
+        lstm_feats = self.hidden2tag(lstm_out)  # 11*5 is a linear layer
 
         return lstm_feats
 
-    #得到gold_seq tag的score 即根据真实的label 来计算一个score，但是因为转移矩阵是随机生成的，故算出来的score不是最理想的值
+    # 得到gold_seq tag的score 即根据真实的label 来计算一个score，但是因为转移矩阵是随机生成的，故算出来的score不是最理想的值
     def _score_sentence(self, feats, tags):
         # Gives the score of a provided tag sequence #feats 11*5  tag 11 维
         score = autograd.Variable(torch.Tensor([0]))
@@ -137,15 +129,15 @@ class BiLSTM_CRF(nn.Module):
                           tags])  #将START_TAG的标签３拼接到tag序列最前面，这样tag就是12个了
 
         for i, feat in enumerate(feats):
-            #self.transitions[tags[i + 1], tags[i]] 实际得到的是从标签i到标签i+1的转移概率
-            #feat[tags[i+1]], feat是step i 的输出结果，有５个值，对应B, I, E, START_TAG, END_TAG, 取对应标签的值
-            #transition【j,i】 就是从i ->j 的转移概率值
+            # self.transitions[tags[i + 1], tags[i]] 实际得到的是从标签i到标签i+1的转移概率
+            # feat[tags[i+1]], feat是step i 的输出结果，有５个值，对应B, I, E, START_TAG, END_TAG, 取对应标签的值
+            # transition【j,i】 就是从i ->j 的转移概率值
             score = score + self.transitions[tags[i + 1],
                                              tags[i]] + feat[tags[i + 1]]
         score = score + self.transitions[self.tag_to_ix[STOP_TAG], tags[-1]]
         return score
 
-    #解码，得到预测的序列，以及预测序列的得分
+    # 解码，得到预测的序列，以及预测序列的得分
     def _viterbi_decode(self, feats):
         backpointers = []
 
@@ -194,10 +186,9 @@ class BiLSTM_CRF(nn.Module):
         return path_score, best_path
 
     def neg_log_likelihood(self, sentence, tags):
-        feats = self._get_lstm_features(
-            sentence)  #11*5 经过了LSTM+Linear矩阵后的输出，之后作为CRF的输入。
-        forward_score = self._forward_alg(feats)  #0维的一个得分，20.*来着
-        gold_score = self._score_sentence(feats, tags)  #tensor([ 4.5836])
+        feats = self._get_lstm_features(sentence)  # 11*5 经过了LSTM+Linear矩阵后的输出，之后作为CRF的输入。
+        forward_score = self._forward_alg(feats)  # 0维的一个得分，20.*来着
+        gold_score = self._score_sentence(feats, tags)  # tensor([ 4.5836])
 
         return forward_score - gold_score
 
@@ -240,9 +231,9 @@ optimizer = optim.SGD(model.parameters(), lr=0.01, weight_decay=1e-4)
 # print(model(precheck_sent))
 
 # Make sure prepare_sequence from earlier in the LSTM section is loaded
-for epoch in range(
-        1):  # again, normally you would NOT do 300 epochs, it is toy data
+for epoch in range(1):  # again, normally you would NOT do 300 epochs, it is toy data
     for sentence, tags in training_data:
+
         # Step 1. Remember that Pytorch accumulates gradients.
         # We need to clear them out before each instance
         model.zero_grad()
@@ -253,18 +244,15 @@ for epoch in range(
         targets = torch.LongTensor([tag_to_ix[t] for t in tags])
 
         # Step 3. Run our forward pass.
-        neg_log_likelihood = model.neg_log_likelihood(
-            sentence_in,
-            targets)  #tensor([ 15.4958]) 最大的可能的值与 根据随机转移矩阵 计算的真实值 的差
+        neg_log_likelihood = model.neg_log_likelihood(sentence_in, targets)  # tensor([ 15.4958]) 最大的可能的值与 根据随机转移矩阵 计算的真实值 的差
 
         # Step 4. Compute the loss, gradients, and update the parameters by
         # calling optimizer.step()
-        neg_log_likelihood.backward(
-        )  #卧槽，这就能更新啦？？？进行了反向传播，算了梯度值。debug中可以看到，transition的_grad 有了值 torch.Size([5, 5])
+        neg_log_likelihood.backward()  # 卧槽，这就能更新啦？？？进行了反向传播，算了梯度值。debug中可以看到，transition的_grad 有了值 torch.Size([5, 5])
         optimizer.step()
 
 # Check predictions after training
 precheck_sent = prepare_sequence(training_data[0][0], word_to_ix)
-print(model(precheck_sent)[0])  #得分
+print(model(precheck_sent)[0])  # 得分
 print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-print(model(precheck_sent)[1])  #tag sequence
+print(model(precheck_sent)[1])  # tag sequence
