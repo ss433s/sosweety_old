@@ -43,7 +43,7 @@ class Word(object):
 
 def stanford_simplify(pos_tags):  # stanford 的postag 是列表，列表元素是（词，词性）的元组
     stanford_simplify_dict = {}
-    with open('datasets/stanford_simplify') as f:
+    with open('../data/datasets/stanford_simplify') as f:
         lines = f.readlines()
         for line in lines:
             line = line.strip().split('\t')

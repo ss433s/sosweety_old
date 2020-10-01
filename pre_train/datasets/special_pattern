@@ -1,4 +1,0 @@
-# type feature frep core_word meaning
-NN	[{"word":"北京大学"},{"concept":1}]	27120	-	-
-NN	[{"concept":0},{"special_symbol":"*"},{"word":"了"}]	40862	-	-
-NN	[{"concept":0},{"concept":1}]	27120	-	-

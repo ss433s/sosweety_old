@@ -503,21 +503,21 @@ def check_known_concepts2(parse_result):
 ###################
 
 # 读取主谓宾统计文件
-with open('./datasets/nsubj_pr_stat') as nsubj_file:
+with open('../data/datasets/nsubj_pr_stat') as nsubj_file:
     nsubj_dict = {}
     lines = nsubj_file.readlines()
     for line in lines:
         line = line.strip().split('\t')
         nsubj_dict[line[0]] = int(line[1])
 
-with open('./datasets/dobj_pr_stat') as dobj_file:
+with open('../data/datasets/dobj_pr_stat') as dobj_file:
     dobj_dict = {}
     lines = dobj_file.readlines()
     for line in lines:
         line = line.strip().split('\t')
         dobj_dict[line[0]] = int(line[1])
 
-with open('./datasets/amod_pr_stat') as amod_file:
+with open('../data/datasets/amod_pr_stat') as amod_file:
     amod_dict = {}
     lines = amod_file.readlines()
     for line in lines:
@@ -575,7 +575,7 @@ def extract_kpoints(sub_sentence):
 ###################
 def hanlp_parse(text):
     ha2stanford_dict = {}
-    with open('datasets/ha2stanford') as f:
+    with open('../data/datasets/ha2stanford') as f:
         lines = f.readlines()
         for line in lines:
             line = line.strip().split('\t')
@@ -628,7 +628,7 @@ def stanford_parse(text):
 # 读取短语库和句式库
 ###################
 # old version
-# with open('./datasets/new_test_file') as pattern_file:
+# with open('../data/datasets/new_test_file') as pattern_file:
 #     phrase_patterns = []
 #     lines = pattern_file.readlines()
 #     del(lines[0])
@@ -637,7 +637,7 @@ def stanford_parse(text):
 #         phrase_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4])
 #         phrase_patterns.append(phrase_pattern)
 
-with open('./datasets/new_test_file2') as pattern_file:
+with open('../data/datasets/new_test_file2') as pattern_file:
     phrase_patterns = []
     lines = pattern_file.readlines()
     del(lines[0])
@@ -646,7 +646,7 @@ with open('./datasets/new_test_file2') as pattern_file:
         phrase_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7])
         phrase_patterns.append(phrase_pattern)
 
-with open('./datasets/ss_pattern') as ss_file:
+with open('../data/datasets/ss_pattern') as ss_file:
     ss_patterns = []
     lines = ss_file.readlines()
     del(lines[0])

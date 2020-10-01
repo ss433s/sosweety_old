@@ -28,7 +28,7 @@ with open('./init_data/final_entities') as test_file:
 
 
 # 主|谓
-with open('./datasets/nsubj_pr_stat') as nsubj_file:
+with open('../data/datasets/nsubj_pr_stat') as nsubj_file:
     lines = nsubj_file.readlines()
     for i in range(len(lines)):
         if i % 50000 == 0:
@@ -51,7 +51,7 @@ with open('./datasets/nsubj_pr_stat') as nsubj_file:
 
 
 # 宾语 | 动词
-# with open('./datasets/dobj_pr_stat') as dobj_file:
+# with open('../data/datasets/dobj_pr_stat') as dobj_file:
 #     lines = dobj_file.readlines()
 #     for i in range(len(lines)):
 #         if i % 5000 == 0:
@@ -72,7 +72,7 @@ with open('./datasets/nsubj_pr_stat') as nsubj_file:
 
 
 # 形容词|名词
-# with open('./datasets/amod_pr_stat') as amod_file:
+# with open('../data/datasets/amod_pr_stat') as amod_file:
 #     lines = amod_file.readlines()
 #     for i in range(len(lines)):
 #         if i % 5000 == 0:
@@ -91,7 +91,7 @@ with open('./datasets/nsubj_pr_stat') as nsubj_file:
 # 写入文件
 update_list = [['Concept', concepts], ['Method', methods]]
 for file_pre, file_list in update_list:
-    file_name = './fake_database/' + file_pre + '_table'
+    file_name = '../data/fake_database/' + file_pre + '_table'
     # with open(file_name, 'r') as f:
     #     line1 = f.readline()
     with open(file_name, 'w') as f:
@@ -112,7 +112,7 @@ for file_pre, file_list in update_list:
                     value_list.append('-')
             f.write('\t'.join(value_list) + '\n')
 
-with open('./fake_database/Word_table', 'w') as f:
+with open('../data/fake_database/Word_table', 'w') as f:
     f.write('# word  concept_id  Type    freq   Confidence\n')
     for concept in concepts:
         tmp_list = [concept.word, concept.concept_id, 'concept', 0, 0.9]

@@ -2,9 +2,9 @@ import json
 from knowledgebase import word2id_dict, concepts, Concept
 
 with open('./init_data/card_relation_uniq') as test_file:
-    concept_relations_file = open('./fake_database/Concept_relation_table', 'a')
-    concept_file = open('./fake_database/Concept_table', 'a')
-    word_file = open('./fake_database/Word_table', 'a')
+    concept_relations_file = open('../data/fake_database/Concept_relation_table', 'a')
+    concept_file = open('../data/fake_database/Concept_table', 'a')
+    word_file = open('../data/fake_database/Word_table', 'a')
     lines = test_file.readlines()
     for i in range(len(lines)):
         if i % 1000 == 0:
@@ -30,11 +30,11 @@ with open('./init_data/card_relation_uniq') as test_file:
     concept_file.close()
     concept_relations_file.close()
 
-with open('./fake_database/Concept_relation_table') as f:
+with open('../data/fake_database/Concept_relation_table') as f:
     lines = f.readlines()
 
 # todo 优化为set 速度太慢
-with open('./fake_database/Concept_relation_table', 'w') as f:
+with open('../data/fake_database/Concept_relation_table', 'w') as f:
     new_lines = []
     for line in lines:
         if line not in new_lines:

@@ -2,6 +2,7 @@ __pycache__
 .idea
 *.json
 init_data/
+data/
 fake_database/
 !.vscode/launch.json
 !.vscode/settings.json

@@ -8,7 +8,7 @@ import json
 from knowledgebase import word2id_dict
 
 with open('./init_data/train_data.json') as test_file:
-    with open('./fake_database/Concept_relation_table', 'w') as f:
+    with open('../data/fake_database/Concept_relation_table', 'w') as f:
         f.write('# concept1\tconcept2\trelation_type(0: belong_to)\n')
         lines = test_file.readlines()
         for i in range(len(lines)):
