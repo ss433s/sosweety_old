@@ -4,4 +4,5 @@ __pycache__
 init_data/
 fake_database/
 !.vscode/launch.json
+!.vscode/settings.json
 *.DS_Store
