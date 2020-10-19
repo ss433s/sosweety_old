@@ -1,3 +1,5 @@
+program
+
 0, init.sh
 init_data 中执行extract_know_entities.py 提取百度信息抽取数据中所有实体
 将主谓宾，百度百科(entities)，百度信息抽取中所有名词性实体合并为all_entities
@@ -22,7 +24,17 @@ Concept_relation_table 去重
 
 2.3 固定组合词发现
 
-
-
 3, 重分词
 
+
+
+
+thought
+
+1  knowledge base
+    word2id
+    no instance
+    concept has method
+
+2  parser
+    sentence pattern database

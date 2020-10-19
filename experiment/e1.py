@@ -1,6 +1,20 @@
+name = '函数外边'
+
+
+# 局部变量-->函数里面定义的变量--函数里print从里到外找name
+def change_name():
+    name = '函数里边'
+
+    print('在', name, id(name))
+
+
+change_name()
+print(name, id(name))
+
+
 d = [0] * 5
 print(d)
-d[2] =2
+d[2] = 2
 
 d = {}
 d['123'] = 31
