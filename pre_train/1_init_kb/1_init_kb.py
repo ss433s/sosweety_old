@@ -1,17 +1,23 @@
 import json
+import sys, os
+sys.path.append("..")
 # import pandas as pd
 # import numpy as np
 # from sParser import hanlp_parse
-from knowledgebase import Concept, Method
-# from stanfordcorenlp import StanfordCoreNLP
-# nlp = StanfordCoreNLP(r'/Users/guoyu/Documents/supports/stanford-corenlp/stanford-corenlp-full-2018-10-05/', lang='zh')
+# from knowledgebase import Concept, Method
 
+# 用于init kb的文件列表, 通常包括spo file和kb relation file
+# 关于数据太大的问题，可以尝试取交集
+# 或者只保留下一步需要用到的数据的方法
+spo_prefix = '/data/spo_and_pattern'
+spo_files = ['nsubj_pr_stat', 'dobj_pr_stat', 'amod_pr_stat']
 
-# 导入百科数据 主谓宾数据
-# to do
-# 增加baidu比赛数据信息 百科的关系信息
-#
-# 更新concept table, method table和word table
+kb_prefix = '/data/kb_relations'
+kb_files = ['pedia_relation', 'pkubase', 'wiki_relation']
+
+this_file_path = os.path.split(os.path.realpath(__file__))[0]
+# 可以根据需求改变../..
+root_path = os.path.abspath(os.path.join(os.getcwd(), "../.."))
 
 concepts = []
 methods = []
