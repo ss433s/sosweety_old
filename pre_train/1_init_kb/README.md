@@ -4,12 +4,13 @@
 
 ### 1, zh_wiki spo统计结果 
     格式为 s|p 
-### 2, 百度的关系提取结果 50种分类的结果
+### 2, 百度的关系提取结果 50种分类的结果 known_entities
+
 ### 3, zh_wiki concept relation结果（自己做的数据，46万）
 ### 4, cn pedia 198万数据（根据baidu card标记提取card的第一句话自己处理得到，处理方法同3）
 ### 5, pkubase 2500万数据，kb自带'<类型>'关系
 ### 6, todo 补充xlcore数据
-### 7, 2-6 格式均为 concept1 \t concept2
+### 7, 3-6 格式均为 concept1 \t concept2
 
 <br/>
 
