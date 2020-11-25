@@ -1,4 +1,4 @@
-import json
+import sqlite3
 import sys, os
 sys.path.append("..")
 # import pandas as pd
@@ -6,14 +6,21 @@ sys.path.append("..")
 # from sParser import hanlp_parse
 # from knowledgebase import Concept, Method
 
+# 数据库路径
+db_path = 'data/knowledgebase/knowledgebase.db'
+
+#########################################
 # 用于init kb的文件列表, 通常包括spo file和kb relation file(有少量错误)
 # 关于数据太大的问题，可以尝试取交集
 # 或者只保留下一步需要用到的数据的方法
+#########################################
 spo_prefix = 'data/spo_and_pattern'
 spo_files = ['nsubj_pr_stat', 'dobj_pr_stat', 'amod_pr_stat']
+spo_files = ['nsubj_pr_stat']
 
 kb_prefix = 'data/kb_relations'
 kb_files = ['pedia_relation', 'pkubase', 'wiki_relation']
+kb_files = ['pedia_relation']
 
 # 百度信息抽取比赛实体列表
 baidu_ie_entity_file = '/data/corpus/baidu_ie_competition/known_entities'
@@ -68,6 +75,76 @@ for kb_file in kb_files:
 
 print(len(concept_set))
 
+
+###################
+# 初始化数据库
+###################
+db_real_path = root_path + '/' + db_path
+kb_db_conn = sqlite3.connect(db_real_path)
+print("Open database successfully")
+
+cur = kb_db_conn.cursor()
+
+create_concept_tbl_sql = '''CREATE TABLE Concept_tbl
+       (Concept_id INT PRIMARY KEY     NOT NULL,
+       Word           TEXT    NOT NULL,
+       Methods        TEXT    NOT NULL,
+       Prpperties     TEXT    NOT NULL);'''
+
+create_method_tbl_sql = '''CREATE TABLE Method_tbl
+       (Method_id INT PRIMARY KEY     NOT NULL,
+       Word           TEXT    NOT NULL,
+       Code        TEXT    NOT NULL);'''
+
+create_fact_tbl_sql = '''CREATE TABLE Fact_tbl
+       (Fact_id INT PRIMARY KEY     NOT NULL,
+       Concept1       INT    NOT NULL,
+       Restriction1   TEXT    NOT NULL,
+       Concept2       INT    NOT NULL,
+       Restriction2   TEXT    NOT NULL,
+       Relation       INT    NOT NULL,
+       Relation_restriction   TEXT    NOT NULL,
+       Time       TEXT,
+       Location   TEXT,
+       Confidence  REAL       NOT NULL);'''
+
+
+create_word_tbl_sql = '''CREATE TABLE Word_tbl
+       (ID INTEGER PRIMARY KEY AUTOINCREMENT    NOT NULL,
+       Word           TEXT    NOT NULL,
+       Concept_id        TEXT    NOT NULL,
+       Type     TEXT    NOT NULL,
+       Frequece  INT    NOT NULL,
+       Confidence REAL NOT NULL);'''
+
+create_concept_relation_tbl_sql = '''CREATE TABLE Concept_relation_tbl
+       (ID INT PRIMARY KEY     NOT NULL,
+       Concept1       INT    NOT NULL,
+       Concept2       INT    NOT NULL,
+       Relation_type  INT    NOT NULL);'''
+
+cur.execute(create_concept_tbl_sql)
+cur.execute(create_method_tbl_sql)
+cur.execute(create_fact_tbl_sql)
+cur.execute(create_word_tbl_sql)
+cur.execute(create_concept_relation_tbl_sql)
+
+kb_db_conn.commit()
+
+
+###################
+# 导入数据库
+###################
+for index, concept in enumerate(concept_set):
+    print(index, concept)
+    insert_concept_sql = "INSERT INTO Concept_tbl (Concept_id, Word, Methods, Properties) \
+        Values (%s, %s, '[]', '[]')" % (index, concept)
+    print(insert_concept_sql)
+
+
+
+
+kb_db_conn.close()
 '''
 # 写入文件
 update_list = [['Concept', concepts], ['Method', methods]]
