@@ -3,5 +3,4 @@ __pycache__
 *.json
 data/
 !.vscode/launch.json
-!.vscode/settings.json
 *.DS_Store
