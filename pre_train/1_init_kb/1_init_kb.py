@@ -1,5 +1,7 @@
+import os, sys
 import sqlite3
-import sys, os
+import json
+
 sys.path.append("..")
 # import pandas as pd
 # import numpy as np
@@ -16,7 +18,7 @@ db_path = 'data/knowledgebase/knowledgebase.db'
 #########################################
 spo_prefix = 'data/spo_and_pattern'
 spo_files = ['nsubj_pr_stat', 'dobj_pr_stat', 'amod_pr_stat']
-spo_files = ['nsubj_test']
+spo_files = ['nsubj_test', 'dobj_test']
 
 kb_prefix = 'data/kb_relations'
 kb_files = ['pedia_relation', 'pkubase', 'wiki_relation']
@@ -87,12 +89,13 @@ cur = kb_db_conn.cursor()
 create_concept_tbl_sql = '''CREATE TABLE Concept_tbl
        (Concept_id INT PRIMARY KEY     NOT NULL,
        Word           TEXT    NOT NULL,
-       Methods        TEXT    NOT NULL,
-       Properties     TEXT    NOT NULL);'''
+       Methods        TEXT,
+       Properties     TEXT);'''
 
 create_method_tbl_sql = '''CREATE TABLE Method_tbl
        (Method_id INT PRIMARY KEY     NOT NULL,
        Word           TEXT    NOT NULL,
+       Objects        TEXT,
        Code        TEXT);'''
 
 create_fact_tbl_sql = '''CREATE TABLE Fact_tbl
@@ -106,7 +109,6 @@ create_fact_tbl_sql = '''CREATE TABLE Fact_tbl
        Time       TEXT,
        Location   TEXT,
        Confidence  REAL       NOT NULL);'''
-
 
 create_word_tbl_sql = '''CREATE TABLE Word_tbl
        (ID INTEGER PRIMARY KEY AUTOINCREMENT    NOT NULL,
@@ -134,17 +136,80 @@ kb_db_conn.commit()
 ###################
 # 导入数据库
 ###################
-for index, concept in enumerate(concept_set):
-    insert_concept_sql = "INSERT INTO Concept_tbl (Concept_id, Word, Methods, Properties) \
-        Values (%s, '%s', '[]', '[]')" % (index, concept)
-    cur.execute(insert_concept_sql)
 
+# 导入concept和method
+concept_word2id_dict = {}
+for index, concept in enumerate(concept_set):
+    concept_word2id_dict[concept] = index
+    insert_concept_sql = "INSERT INTO Concept_tbl (Concept_id, Word) \
+        Values (%s, '%s')" % (index, concept)
+    cur.execute(insert_concept_sql)
+del concept_set
+
+method_word2id_dict = {}
 for index, method in enumerate(method_set):
-    insert_method_sql = "INSERT INTO Method_tbl (Method_id, Word, Code) \
-        Values (%s, '%s', '')" % (index, method)
+    method_word2id_dict[method] = index
+    insert_method_sql = "INSERT INTO Method_tbl (Method_id, Word) \
+        Values (%s, '%s')" % (index, method)
     cur.execute(insert_method_sql)
+del method_set
 
 kb_db_conn.commit()
+
+
+# 根据method 更新关联的concept
+# 如果spo文件有重复，会导致部分内容重复 tofix
+
+for spo_file in spo_files:
+    spo_file_path = os.path.join(root_path, spo_prefix, spo_file)
+
+    # 主谓关系提取concept的methods列表
+    if 'nsubj' in spo_file:
+        concept_method_dict = {}
+        with open(spo_file_path) as spo_file_handler:
+            line = spo_file_handler.readline()
+            while line:
+                line_list = line.strip().split('\t')
+                words = line_list[0].split('|')
+
+                subj = words[0]
+                method = words[1]
+                method_id = method_word2id_dict[method]
+                if subj in concept_method_dict:
+                    concept_method_dict[subj].append(method_id)
+                else:
+                    concept_method_dict[subj] = [method_id]
+                line = spo_file_handler.readline()
+
+            for subj in concept_method_dict:
+                update_sql = "UPDATE Concept_tbl set Methods = '%s' where Word='%s'" % (json.dumps(concept_method_dict[subj]), subj)
+                cur.execute(update_sql)
+            kb_db_conn.commit()
+
+    # 动宾关系提取methods的obj列表
+    if 'dobj' in spo_file:
+        method_concept_dict = {}
+        with open(spo_file_path) as spo_file_handler:
+            line = spo_file_handler.readline()
+            while line:
+                line_list = line.strip().split('\t')
+                words = line_list[0].split('|')
+
+                obj = words[0]
+                method = words[1]
+                obj_id = concept_word2id_dict[obj]
+                if method in method_concept_dict:
+                    method_concept_dict[method].append(obj_id)
+                else:
+                    method_concept_dict[method] = [obj_id]
+                line = spo_file_handler.readline()
+
+            for method in method_concept_dict:
+                update_sql = "UPDATE Method_tbl set Objects = '%s' where Word='%s'" % (json.dumps(method_concept_dict[method]), method)
+                # print(update_sql)
+                cur.execute(update_sql)
+            kb_db_conn.commit()
+
 kb_db_conn.close()
 
 '''

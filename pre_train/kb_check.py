@@ -19,7 +19,8 @@ for row in rst:
     table_list.append(row[0])
 
 for table in table_list:
-    sql3 = 'SELECT * FROM %s limit 3' % table
+    print('--------' + table + '------------')
+    sql3 = 'SELECT * FROM %s ' % table
     table_content = cur.execute(sql3)
     for line in table_content:
         print(line)
