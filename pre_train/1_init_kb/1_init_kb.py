@@ -142,16 +142,16 @@ concept_word2id_dict = {}
 for index, concept in enumerate(concept_set):
     concept_word2id_dict[concept] = index
     insert_concept_sql = "INSERT INTO Concept_tbl (Concept_id, Word) \
-        Values (%s, '%s')" % (index, concept)
-    cur.execute(insert_concept_sql)
+        Values (?, ?)"
+    cur.execute(insert_concept_sql, (index, concept))
 del concept_set
 
 method_word2id_dict = {}
 for index, method in enumerate(method_set):
     method_word2id_dict[method] = index
     insert_method_sql = "INSERT INTO Method_tbl (Method_id, Word) \
-        Values (%s, '%s')" % (index, method)
-    cur.execute(insert_method_sql)
+        Values (?, ?)"
+    cur.execute(insert_method_sql, (index, method))
 del method_set
 
 kb_db_conn.commit()
@@ -182,8 +182,8 @@ for spo_file in spo_files:
                 line = spo_file_handler.readline()
 
             for subj in concept_method_dict:
-                update_sql = "UPDATE Concept_tbl set Methods = '%s' where Word='%s'" % (json.dumps(concept_method_dict[subj]), subj)
-                cur.execute(update_sql)
+                update_sql = "UPDATE Concept_tbl set Methods = ? where Word=?"
+                cur.execute(update_sql, (json.dumps(concept_method_dict[subj]), subj))
             kb_db_conn.commit()
 
     # 动宾关系提取methods的obj列表
@@ -205,9 +205,9 @@ for spo_file in spo_files:
                 line = spo_file_handler.readline()
 
             for method in method_concept_dict:
-                update_sql = "UPDATE Method_tbl set Objects = '%s' where Word='%s'" % (json.dumps(method_concept_dict[method]), method)
+                update_sql = "UPDATE Method_tbl set Objects = ? where Word= ?"
                 # print(update_sql)
-                cur.execute(update_sql)
+                cur.execute(update_sql, (json.dumps(method_concept_dict[method]), method))
             kb_db_conn.commit()
 
 kb_db_conn.close()
