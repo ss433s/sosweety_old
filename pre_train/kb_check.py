@@ -20,7 +20,7 @@ for row in rst:
 
 for table in table_list:
     print('--------' + table + '------------')
-    sql3 = 'SELECT * FROM %s ' % table
+    sql3 = 'SELECT * FROM %s limit 10' % table
     table_content = cur.execute(sql3)
     for line in table_content:
         print(line)

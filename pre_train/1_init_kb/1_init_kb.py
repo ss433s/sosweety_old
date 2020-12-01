@@ -124,14 +124,14 @@ create_concept_relation_tbl_sql = '''CREATE TABLE Concept_relation_tbl
        Concept2       INT    NOT NULL,
        Relation_type  INT    NOT NULL);'''
 
-cur.execute(create_concept_tbl_sql)
-cur.execute(create_method_tbl_sql)
-cur.execute(create_fact_tbl_sql)
-cur.execute(create_word_tbl_sql)
-cur.execute(create_concept_relation_tbl_sql)
+# cur.execute(create_concept_tbl_sql)
+# cur.execute(create_method_tbl_sql)
+# cur.execute(create_fact_tbl_sql)
+# cur.execute(create_word_tbl_sql)
+# cur.execute(create_concept_relation_tbl_sql)
 
-kb_db_conn.commit()
-print("Create database successfully")
+# kb_db_conn.commit()
+# print("Create database successfully")
 
 
 ###################
@@ -146,21 +146,25 @@ for index, concept in enumerate(concept_set):
     concept_word2id_dict[concept] = index
     insert_concept_sql = "INSERT INTO Concept_tbl (Concept_id, Word) \
         Values (?, ?)"
-    cur.execute(insert_concept_sql, (index, concept))
+    # cur.execute(insert_concept_sql, (index, concept))
 del concept_set
 
 method_word2id_dict = {}
 for index, method in enumerate(method_set):
-    if index % 1000000 == 0:
+    if index % 10000000 == 0:
         print('create %s methods' % index)
     method_word2id_dict[method] = index
     insert_method_sql = "INSERT INTO Method_tbl (Method_id, Word) \
         Values (?, ?)"
-    cur.execute(insert_method_sql, (index, method))
+    # cur.execute(insert_method_sql, (index, method))
 del method_set
 print('total method')
 
 kb_db_conn.commit()
+
+# 建立word的index
+create_index_sql = 'CREATE INDEX Word_index ON Method_tbl (Word);'
+cur.execute(create_index_sql)
 
 
 # 根据method 更新关联的concept
@@ -191,7 +195,7 @@ for spo_file in spo_files:
             for subj in concept_method_dict:
                 concept_id = concept_word2id_dict[subj]
                 count += 1
-                if count % 100 == 0:
+                if count % 10000 == 0:
                     print('update %s spo' % count)
                 update_sql = "UPDATE Concept_tbl set Methods = ? where Concept_id=?"
                 cur.execute(update_sql, (json.dumps(concept_method_dict[subj]), concept_id))
@@ -215,7 +219,11 @@ for spo_file in spo_files:
                     method_concept_dict[method] = [obj_id]
                 line = spo_file_handler.readline()
 
+            count = 0
             for method in method_concept_dict:
+                count += 1
+                if count % 100 == 0:
+                    print('update %s spo' % count)
                 update_sql = "UPDATE Method_tbl set Objects = ? where Word= ?"
                 # print(update_sql)
                 cur.execute(update_sql, (json.dumps(method_concept_dict[method]), method))
