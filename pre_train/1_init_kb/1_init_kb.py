@@ -113,7 +113,7 @@ create_fact_tbl_sql = '''CREATE TABLE Fact_tbl
 create_word_tbl_sql = '''CREATE TABLE Word_tbl
        (ID INTEGER PRIMARY KEY AUTOINCREMENT    NOT NULL,
        Word           TEXT    NOT NULL,
-       Concept_id        TEXT    NOT NULL,
+       Item_id        TEXT    NOT NULL,
        Type     TEXT    NOT NULL,
        Frequece  INT    NOT NULL,
        Confidence REAL NOT NULL);'''
@@ -124,14 +124,14 @@ create_concept_relation_tbl_sql = '''CREATE TABLE Concept_relation_tbl
        Concept2       INT    NOT NULL,
        Relation_type  INT    NOT NULL);'''
 
-# cur.execute(create_concept_tbl_sql)
-# cur.execute(create_method_tbl_sql)
-# cur.execute(create_fact_tbl_sql)
-# cur.execute(create_word_tbl_sql)
-# cur.execute(create_concept_relation_tbl_sql)
+cur.execute(create_concept_tbl_sql)
+cur.execute(create_method_tbl_sql)
+cur.execute(create_fact_tbl_sql)
+cur.execute(create_word_tbl_sql)
+cur.execute(create_concept_relation_tbl_sql)
 
-# kb_db_conn.commit()
-# print("Create database successfully")
+kb_db_conn.commit()
+print("Create database successfully")
 
 
 ###################
@@ -146,7 +146,10 @@ for index, concept in enumerate(concept_set):
     concept_word2id_dict[concept] = index
     insert_concept_sql = "INSERT INTO Concept_tbl (Concept_id, Word) \
         Values (?, ?)"
-    # cur.execute(insert_concept_sql, (index, concept))
+    insert_word_sql = "INSERT INTO Word_tbl (Word, Item_id, Type, Frequece, Confidence) \
+        Values (?, ?, 'concept', 0, 0.9)"
+    cur.execute(insert_concept_sql, (index, concept))
+    cur.execute(insert_word_sql, (concept, index))
 del concept_set
 
 method_word2id_dict = {}
@@ -156,15 +159,25 @@ for index, method in enumerate(method_set):
     method_word2id_dict[method] = index
     insert_method_sql = "INSERT INTO Method_tbl (Method_id, Word) \
         Values (?, ?)"
-    # cur.execute(insert_method_sql, (index, method))
+    insert_word_sql = "INSERT INTO Word_tbl (Word, Item_id, Type, Frequece, Confidence) \
+        Values (?, ?, 'method', 0, 0.9)"
+    cur.execute(insert_method_sql, (index, method))
+    cur.execute(insert_word_sql, (method, index))
 del method_set
-print('total method')
 
 kb_db_conn.commit()
 
-# 建立word的index
+
+# 建立index
 create_index_sql = 'CREATE INDEX Word_index ON Method_tbl (Word);'
 cur.execute(create_index_sql)
+create_index_sql = 'CREATE INDEX Word_index ON Concept_tbl (Word);'
+cur.execute(create_index_sql)
+create_index_sql = 'CREATE INDEX Word_index ON Word_tbl (Word);'
+cur.execute(create_index_sql)
+create_index_sql = 'CREATE INDEX Word_index ON Word_tbl (Item_id);'
+cur.execute(create_index_sql)
+kb_db_conn.commit()
 
 
 # 根据method 更新关联的concept
