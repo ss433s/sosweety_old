@@ -181,8 +181,68 @@ kb_db_conn.commit()
 
 
 # 根据method 更新关联的concept
-# 如果spo文件有重复，会导致部分内容重复 tofix
 
+for spo_file in spo_files:
+    spo_file_path = os.path.join(root_path, spo_prefix, spo_file)
+
+    # 主谓关系提取concept的methods列表
+    if 'nsubj' in spo_file:
+        concept_method_dict = {}
+        with open(spo_file_path) as spo_file_handler:
+            line = spo_file_handler.readline()
+            while line:
+                line_list = line.strip().split('\t')
+                words = line_list[0].split('|')
+
+                subj = words[0]
+                method = words[1]
+                method_id = method_word2id_dict[method]
+                if subj not in concept_method_dict:
+                    concept_method_dict[subj] = set()
+                concept_method_dict[subj].add(method_id)
+                line = spo_file_handler.readline()
+
+            count = 0
+            for subj in concept_method_dict:
+                concept_id = concept_word2id_dict[subj]
+                count += 1
+                if count % 10000 == 0:
+                    print('update %s spo' % count)
+                update_sql = "UPDATE Concept_tbl set Methods = ? where Concept_id=?"
+                method_list = list(concept_method_dict[subj])
+                cur.execute(update_sql, (json.dumps(method_list), concept_id))
+            kb_db_conn.commit()
+
+    # 动宾关系提取methods的obj列表
+    if 'dobj' in spo_file:
+        method_concept_dict = {}
+        with open(spo_file_path) as spo_file_handler:
+            line = spo_file_handler.readline()
+            while line:
+                line_list = line.strip().split('\t')
+                words = line_list[0].split('|')
+
+                obj = words[0]
+                method = words[1]
+                obj_id = concept_word2id_dict[obj]
+                if method not in method_concept_dict:
+                    method_concept_dict[method] = set()
+                method_concept_dict[method].add(concept_id)
+                line = spo_file_handler.readline()
+
+            count = 0
+            for method in method_concept_dict:
+                count += 1
+                if count % 100 == 0:
+                    print('update %s spo' % count)
+                update_sql = "UPDATE Method_tbl set Objects = ? where Word= ?"
+                # print(update_sql)
+                concept_list = list(method_concept_dict[method])
+                cur.execute(update_sql, (json.dumps(concept_list), method))
+            kb_db_conn.commit()
+
+
+# 遍历relation， 录入relation表
 for spo_file in spo_files:
     spo_file_path = os.path.join(root_path, spo_prefix, spo_file)
 
@@ -243,15 +303,3 @@ for spo_file in spo_files:
             kb_db_conn.commit()
 
 kb_db_conn.close()
-
-'''
-# 写入文件
-with open('../data/fake_database/Word_table', 'w') as f:
-    f.write('# word  concept_id  Type    freq   Confidence\n')
-    for concept in concepts:
-        tmp_list = [concept.word, concept.concept_id, 'concept', 0, 0.9]
-        f.write(json.dumps(tmp_list, ensure_ascii=False) + '\n')
-    for method in methods:
-        tmp_list = [method.word, method.method_id, 'method', 0, 0.9]
-        f.write(json.dumps(tmp_list, ensure_ascii=False) + '\n')
-'''
