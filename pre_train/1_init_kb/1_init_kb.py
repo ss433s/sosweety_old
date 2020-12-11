@@ -18,11 +18,11 @@ db_path = 'data/knowledgebase/knowledgebase.db'
 #########################################
 spo_prefix = 'data/spo_and_pattern'
 spo_files = ['nsubj_pr_stat', 'dobj_pr_stat', 'amod_pr_stat']
-# spo_files = ['nsubj_test', 'dobj_test']
+spo_files = ['nsubj_test', 'dobj_test']
 
 kb_prefix = 'data/kb_relations'
 kb_files = ['pedia_relation', 'pkubase', 'wiki_relation']
-# kb_files = ['sql_test']
+kb_files = ['sql_test']
 
 # 百度信息抽取比赛实体列表
 baidu_ie_entity_file = '/data/corpus/baidu_ie_competition/known_entities'
@@ -32,6 +32,8 @@ this_file_path = os.path.split(os.path.realpath(__file__))[0]
 # 可以根据需求改变../..
 root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
 
+
+# set方案可以调整为只用一次word2id dict的方案，更省内存
 # concept_words = {}
 # method_words = {}
 
@@ -119,7 +121,7 @@ create_word_tbl_sql = '''CREATE TABLE Word_tbl
        Confidence REAL NOT NULL);'''
 
 create_concept_relation_tbl_sql = '''CREATE TABLE Concept_relation_tbl
-       (ID INT PRIMARY KEY     NOT NULL,
+       (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
        Concept1       INT    NOT NULL,
        Concept2       INT    NOT NULL,
        Relation_type  INT    NOT NULL);'''
@@ -169,13 +171,13 @@ kb_db_conn.commit()
 
 
 # 建立index
-create_index_sql = 'CREATE INDEX Word_index ON Method_tbl (Word);'
+create_index_sql = 'CREATE INDEX Method_word_index ON Method_tbl (Word);'
 cur.execute(create_index_sql)
-create_index_sql = 'CREATE INDEX Word_index ON Concept_tbl (Word);'
+create_index_sql = 'CREATE INDEX Concept_word_index ON Concept_tbl (Word);'
 cur.execute(create_index_sql)
 create_index_sql = 'CREATE INDEX Word_index ON Word_tbl (Word);'
 cur.execute(create_index_sql)
-create_index_sql = 'CREATE INDEX Word_index ON Word_tbl (Item_id);'
+create_index_sql = 'CREATE INDEX ID_index ON Word_tbl (Item_id);'
 cur.execute(create_index_sql)
 kb_db_conn.commit()
 
@@ -243,63 +245,21 @@ for spo_file in spo_files:
 
 
 # 遍历relation， 录入relation表
-for spo_file in spo_files:
-    spo_file_path = os.path.join(root_path, spo_prefix, spo_file)
+for kb_file in kb_files:
+    kb_file_path = os.path.join(root_path, kb_prefix, kb_file)
+    with open(kb_file_path) as kb_file_handler:
+        line = kb_file_handler.readline()
+        while line:
+            words = line.strip().split('\t')
+            if len(words) > 1:
+                concept_id1 = concept_word2id_dict[words[0]]
+                concept_id2 = concept_word2id_dict[words[1]]
+                insert_concept_sql = "INSERT INTO Concept_relation_tbl (Concept1, Concept2, Relation_type) \
+                    Values (?, ?, 0)"
+                cur.execute(insert_concept_sql, (concept_id1, concept_id2))
+                cur.execute(insert_word_sql, (concept, index))
 
-    # 主谓关系提取concept的methods列表
-    if 'nsubj' in spo_file:
-        concept_method_dict = {}
-        with open(spo_file_path) as spo_file_handler:
-            line = spo_file_handler.readline()
-            while line:
-                line_list = line.strip().split('\t')
-                words = line_list[0].split('|')
-
-                subj = words[0]
-                method = words[1]
-                method_id = method_word2id_dict[method]
-                if subj in concept_method_dict:
-                    concept_method_dict[subj].append(method_id)
-                else:
-                    concept_method_dict[subj] = [method_id]
-                line = spo_file_handler.readline()
-
-            count = 0
-            for subj in concept_method_dict:
-                concept_id = concept_word2id_dict[subj]
-                count += 1
-                if count % 10000 == 0:
-                    print('update %s spo' % count)
-                update_sql = "UPDATE Concept_tbl set Methods = ? where Concept_id=?"
-                cur.execute(update_sql, (json.dumps(concept_method_dict[subj]), concept_id))
-            kb_db_conn.commit()
-
-    # 动宾关系提取methods的obj列表
-    if 'dobj' in spo_file:
-        method_concept_dict = {}
-        with open(spo_file_path) as spo_file_handler:
-            line = spo_file_handler.readline()
-            while line:
-                line_list = line.strip().split('\t')
-                words = line_list[0].split('|')
-
-                obj = words[0]
-                method = words[1]
-                obj_id = concept_word2id_dict[obj]
-                if method in method_concept_dict:
-                    method_concept_dict[method].append(obj_id)
-                else:
-                    method_concept_dict[method] = [obj_id]
-                line = spo_file_handler.readline()
-
-            count = 0
-            for method in method_concept_dict:
-                count += 1
-                if count % 100 == 0:
-                    print('update %s spo' % count)
-                update_sql = "UPDATE Method_tbl set Objects = ? where Word= ?"
-                # print(update_sql)
-                cur.execute(update_sql, (json.dumps(method_concept_dict[method]), method))
+            line = kb_file_handler.readline()
             kb_db_conn.commit()
 
 kb_db_conn.close()

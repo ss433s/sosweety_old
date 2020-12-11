@@ -22,6 +22,49 @@
 ### 3, 
 
 
+## 数据库格式
+create_concept_tbl_sql = '''CREATE TABLE Concept_tbl
+       (Concept_id INT PRIMARY KEY     NOT NULL,
+       Word           TEXT    NOT NULL,
+       Methods        TEXT,
+       Properties     TEXT);'''
+
+create_method_tbl_sql = '''CREATE TABLE Method_tbl
+       (Method_id INT PRIMARY KEY     NOT NULL,
+       Word           TEXT    NOT NULL,
+       Objects        TEXT,
+       Code        TEXT);'''
+
+create_fact_tbl_sql = '''CREATE TABLE Fact_tbl
+       (Fact_id INT PRIMARY KEY     NOT NULL,
+       Concept1       INT    NOT NULL,
+       Restriction1   TEXT    NOT NULL,
+       Concept2       INT    NOT NULL,
+       Restriction2   TEXT    NOT NULL,
+       Relation       INT    NOT NULL,
+       Relation_restriction   TEXT    NOT NULL,
+       Time       TEXT,
+       Location   TEXT,
+       Confidence  REAL       NOT NULL);'''
+
+create_word_tbl_sql = '''CREATE TABLE Word_tbl
+       (ID INTEGER PRIMARY KEY AUTOINCREMENT    NOT NULL,
+       Word           TEXT    NOT NULL,
+       Item_id        TEXT    NOT NULL,
+       Type     TEXT    NOT NULL,
+       Frequece  INT    NOT NULL,
+       Confidence REAL NOT NULL);'''
+
+relation type 目前只有0，belong to 这种
+create_concept_relation_tbl_sql = '''CREATE TABLE Concept_relation_tbl
+       (ID INT PRIMARY KEY AUTOINCREMENT NOT NULL,
+       Concept1       INT    NOT NULL,
+       Concept2       INT    NOT NULL,
+       Relation_type  INT    NOT NULL);'''
+
+
+
+
 
 #
 # old version
