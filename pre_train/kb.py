@@ -5,26 +5,21 @@ import sqlite3
 
 from kb_class import Concept, Method, Fact
 
-db_path = '../data/database/test.db'
-conn = sqlite3.connect(db_path)
+db_path = '../data/knowledgebase/knowledgebase.db'
+kb_db_conn = sqlite3.connect(db_path)
+cur = kb_db_conn.cursor()
 print("Opened database successfully")
 
-'''
-class Knowledge_base(object):
 
-    # 为了换sql版本 不存只封装函数和查询能力
-    # def __init__(self):
-    #     self.concepts = concepts
-    #     self.methods = methods
-    #     self.facts = facts
-    #     self.word2id_dict = word2id_dict
-    #     self.concept_relations = concept_relations
+class Knowledge_base(object):
 
     # 查询concept word
     def get_concept_word(self, concept_id):
-        word = concepts[concept_id].word
+        select_sql = "SELECT Word FROM Concept_tbl  where Concept_id=?"
+        result = cur.execute(select_sql, (str(concept_id)))
+        word = result.fetchall()[0][0]
         return word
-
+'''
     # 查询一个词的所有对应id
     def get_word_ids(self, word):
         try:
@@ -133,7 +128,7 @@ class Knowledge_base(object):
                             value_list.append('-')
                     f.write('\t'.join(value_list) + '\n')
         return
-
+'''
 
 class K_point(object):
     # type 包括 concept， method， fact， word等
@@ -148,6 +143,7 @@ class K_point(object):
 # test
 if __name__ == '__main__':
     KB = Knowledge_base()
+    rst = KB.get_concept_word(0)
     rst = KB.word_belong_to_concept("北京大学", 0)
     k_point = K_point('concept', {'concept_id': 2, 'properties': [5]})
     # k_point = K_point('concept', {'word': '南京', 'methods': [0]})
@@ -156,4 +152,4 @@ if __name__ == '__main__':
     KB.merge([k_point])
     # print(facts)
     # print(rst)
-'''
+

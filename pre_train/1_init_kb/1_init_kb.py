@@ -1,5 +1,6 @@
 import os, sys
 import sqlite3
+import collections
 import json
 
 sys.path.append("..")
@@ -8,8 +9,6 @@ sys.path.append("..")
 # from sParser import hanlp_parse
 # from knowledgebase import Concept, Method
 
-# 数据库路径
-db_path = 'data/knowledgebase/knowledgebase.db'
 
 #########################################
 # 用于init kb的文件列表, 通常包括spo file和kb relation file(有少量错误)
@@ -18,11 +17,11 @@ db_path = 'data/knowledgebase/knowledgebase.db'
 #########################################
 spo_prefix = 'data/spo_and_pattern'
 spo_files = ['nsubj_pr_stat', 'dobj_pr_stat', 'amod_pr_stat']
-spo_files = ['nsubj_test', 'dobj_test']
+# spo_files = ['nsubj_test', 'dobj_test']
 
 kb_prefix = 'data/kb_relations'
 kb_files = ['pedia_relation', 'pkubase', 'wiki_relation']
-kb_files = ['sql_test']
+# kb_files = ['sql_test']
 
 # 百度信息抽取比赛实体列表
 baidu_ie_entity_file = '/data/corpus/baidu_ie_competition/known_entities'
@@ -32,6 +31,10 @@ this_file_path = os.path.split(os.path.realpath(__file__))[0]
 # 可以根据需求改变../..
 root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
 
+# 数据库路径 诡异的bug 不能在vscode的目录里
+root_path_up = os.path.abspath(os.path.join(root_path, ".."))
+db_path = 'data/knowledgebase/knowledgebase.db'
+new_db_path = os.path.join(root_path_up, db_path)
 
 # set方案可以调整为只用一次word2id dict的方案，更省内存
 # concept_words = {}
@@ -83,7 +86,7 @@ print(len(concept_set))
 ###################
 # 初始化数据库
 ###################
-kb_db_conn = sqlite3.connect(os.path.join(root_path, db_path))
+kb_db_conn = sqlite3.connect(new_db_path)
 print("Open database successfully")
 
 cur = kb_db_conn.cursor()
@@ -235,7 +238,7 @@ for spo_file in spo_files:
             count = 0
             for method in method_concept_dict:
                 count += 1
-                if count % 100 == 0:
+                if count % 10000 == 0:
                     print('update %s spo' % count)
                 update_sql = "UPDATE Method_tbl set Objects = ? where Word= ?"
                 # print(update_sql)
@@ -249,7 +252,11 @@ for kb_file in kb_files:
     kb_file_path = os.path.join(root_path, kb_prefix, kb_file)
     with open(kb_file_path) as kb_file_handler:
         line = kb_file_handler.readline()
+        count = 0
         while line:
+            count += 1
+            if count % 10000 == 0:
+                print('update %s relations' % count)
             words = line.strip().split('\t')
             if len(words) > 1:
                 concept_id1 = concept_word2id_dict[words[0]]
