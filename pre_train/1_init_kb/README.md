@@ -24,13 +24,13 @@
 
 ## 数据库格式
 create_concept_tbl_sql = '''CREATE TABLE Concept_tbl
-       (Concept_id INT PRIMARY KEY     NOT NULL,
+       (Concept_id INTEGER PRIMARY KEY AUTOINCREMENT     NOT NULL,
        Word           TEXT    NOT NULL,
        Methods        TEXT,
        Properties     TEXT);'''
 
 create_method_tbl_sql = '''CREATE TABLE Method_tbl
-       (Method_id INT PRIMARY KEY     NOT NULL,
+       (Method_id INTEGER PRIMARY KEY AUTOINCREMENT     NOT NULL,
        Word           TEXT    NOT NULL,
        Objects        TEXT,
        Code        TEXT);'''
@@ -47,11 +47,12 @@ create_fact_tbl_sql = '''CREATE TABLE Fact_tbl
        Location   TEXT,
        Confidence  REAL       NOT NULL);'''
 
+Type 0 concept 1method
 create_word_tbl_sql = '''CREATE TABLE Word_tbl
        (ID INTEGER PRIMARY KEY AUTOINCREMENT    NOT NULL,
        Word           TEXT    NOT NULL,
        Item_id        TEXT    NOT NULL,
-       Type     TEXT    NOT NULL,
+       Type     INT    NOT NULL,
        Frequece  INT    NOT NULL,
        Confidence REAL NOT NULL);'''
 

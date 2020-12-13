@@ -1,14 +1,16 @@
 import os
 import sqlite3
 
-db_path = 'data/knowledgebase/knowledgebase.db'
-
-# 当前路径和项目root路径
+# 当前路径和项目root路径， 可以根据需求改变../..
 this_file_path = os.path.split(os.path.realpath(__file__))[0]
-# 可以根据需求改变../..
 root_path = os.path.abspath(os.path.join(this_file_path, ".."))
 
-conn = sqlite3.connect(os.path.join(root_path, db_path))
+# 数据库路径 诡异的bug 不能在vscode的目录里
+root_path_up = os.path.abspath(os.path.join(root_path, ".."))
+db_path = 'data/knowledgebase/knowledgebase.db'
+new_db_path = os.path.join(root_path_up, db_path)
+
+conn = sqlite3.connect(new_db_path)
 print("Opened database successfully")
 cur = conn.cursor()
 

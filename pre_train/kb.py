@@ -1,38 +1,84 @@
-import sys
-import json
-import ahocorasick
+import os
 import sqlite3
 
-from kb_class import Concept, Method, Fact
+# from kb_class import Concept, Method, Fact
 
-db_path = '../data/knowledgebase/knowledgebase.db'
-kb_db_conn = sqlite3.connect(db_path)
-cur = kb_db_conn.cursor()
+
+# 当前路径和项目root路径， 可以根据需求改变../..
+this_file_path = os.path.split(os.path.realpath(__file__))[0]
+root_path = os.path.abspath(os.path.join(this_file_path, ".."))
+
+# 数据库路径 诡异的bug 不能在vscode的目录里
+root_path_up = os.path.abspath(os.path.join(root_path, ".."))
+db_path = 'data/knowledgebase/knowledgebase.db'
+new_db_path = os.path.join(root_path_up, db_path)
+
+kb_db_conn = sqlite3.connect(new_db_path)
 print("Opened database successfully")
+cur = kb_db_conn.cursor()
 
 
 class Knowledge_base(object):
 
     # 查询concept word
     def get_concept_word(self, concept_id):
-        select_sql = "SELECT Word FROM Concept_tbl  where Concept_id=?"
-        result = cur.execute(select_sql, (str(concept_id)))
-        word = result.fetchall()[0][0]
-        return word
+        select_sql = "SELECT Word FROM Concept_tbl where Concept_id=?"
+        result = cur.execute(select_sql, (str(concept_id))).fetchall()
+        if len(result) == 0:
+            return None
+        else:
+            word = result[0][0]
+            return word
+
+    # 查询一个concept id 的上位concept
+    # 仅限一度查询
+    def get_concept_upper_relations(self, concept_id):
+        select_sql = "SELECT Concept2 FROM Concept_relation_tbl where Concept1=?"
+        result = cur.execute(select_sql, [str(concept_id)]).fetchall()
+        if len(result) == 0:
+            return None
+        else:
+            upper_relations = result
+            return upper_relations
+
+    # 添加词
+    #
+    def add_word(self, word, word_type):
+        select_sql = "SELECT Item_id FROM Word_tbl where Word=? and Type = ?"
+        result = cur.execute(select_sql, (word, word_type)).fetchall()
+        if len(result) == 0:
+            if word_type == 0:
+                insert_concept_sql = "INSERT INTO Concept_tbl (Word) Values (?)"
+                insert_concept_result = cur.execute(insert_concept_sql, [word])
+                concept_id = insert_concept_result.lastrowid
+                insert_word_sql = "INSERT INTO Word_tbl (Word, Item_id, Type, Frequece, Confidence) \
+                    Values (?, ?, 0, 0, 0.9)"
+                cur.execute(insert_word_sql, [word, concept_id])
+                kb_db_conn.commit()
+                return concept_id
+
+            elif word_type == 1:
+                insert_method_sql = "INSERT INTO Method_tbl (Word) Values (?)"
+                insert_method_result = cur.execute(insert_method_sql, [word])
+                method_id = insert_method_result.lastrowid
+                insert_word_sql = "INSERT INTO Word_tbl (Word, Item_id, Type, Frequece, Confidence) \
+                    Values (?, ?, 1, 0, 0.9)"
+                cur.execute(insert_word_sql, [word, method_id])
+                kb_db_conn.commit()
+                return method_id
+
+            else:
+                raise Exception('No such word type')
+        else:
+            return -1
+
+
 '''
     # 查询一个词的所有对应id
     def get_word_ids(self, word):
         try:
             word_ids = word2id_dict[word]
             return word_ids
-        except Exception:
-            return []
-
-    # 查询一个concept id 所属于的concept
-    def get_concept_relations(self, concept_id):
-        try:
-            single_concept_relations = concept_relations[concept_id]
-            return single_concept_relations
         except Exception:
             return []
 
@@ -65,70 +111,8 @@ class Knowledge_base(object):
             matched_words.append(actree_word[1])
         return matched_words
 
-    # fake database version
-    def merge(self, k_points):
-        update_list = []
-        for k_point in k_points:
-            if k_point.k_type == 'concept':
-                if not ['Concept', concepts] in update_list:
-                    update_list.append(['Concept', concepts])
-                if 'concept_id' in k_point.content:
-                    concept_id = k_point.content['concept_id']
-                    if 'methods' in k_point.content:
-                        tmp = concepts[concept_id].methods + k_point.content['methods']
-                        concepts[concept_id].methods = list(set(tmp))
-                    if 'properties' in k_point.content:
-                        tmp = concepts[concept_id].properties + k_point.content['properties']
-                        concepts[concept_id].properties = list(set(tmp))
-                else:
-                    concept_id = len(concepts.keys())
-                    concepts[concept_id] = Concept(concept_id, k_point.content['word'], [], [])
-                    # concepts[concept_id]['word']
-                    if 'methods' in k_point.content:
-                        concepts[concept_id].methods = k_point.content['methods']
-                    if 'properties' in k_point.content:
-                        concepts[concept_id].properties = k_point.content['properties']
-
-            if k_point.k_type == 'method':
-                if not ['Method', methods] in update_list:
-                    update_list.append(['Method', methods])
-                if 'method_id' in k_point.content:
-                    continue
-                else:
-                    method_id = len(methods.keys())
-                    methods[method_id] = Method(method_id, k_point.content['word'], [])
-
-            # 需外部控制传入fact的各种限制，先保证concept和method都存在再导入fact
-            # 先导入，在归纳学习时再做合并
-            if k_point.k_type == 'fact':
-                if not ['Fact', facts] in update_list:
-                    update_list.append(['Fact', facts])
-                fact = k_point.content['fact']
-                facts[fact.fact_id] = fact
-
-        for file_pre, file_dict in update_list:
-            file_name = database_version + '/' + file_pre + '_table'
-            # with open(file_name, 'r') as f:
-            #     line1 = f.readline()
-            with open(file_name, 'w') as f:
-                heads = []
-                for k, _ in vars(file_dict[0]).items():
-                    heads.append(k)
-                heads_str = '#' + '\t'.join(heads)
-                f.write(heads_str + '\n')
-                for i in file_dict:
-                    value_list = []
-                    for k, v in vars(file_dict[i]).items():
-                        if v is not None:
-                            if isinstance(v, str):
-                                value_list.append(v)
-                            else:
-                                value_list.append(json.dumps(v, ensure_ascii=False))
-                        else:
-                            value_list.append('-')
-                    f.write('\t'.join(value_list) + '\n')
-        return
 '''
+
 
 class K_point(object):
     # type 包括 concept， method， fact， word等
@@ -144,12 +128,13 @@ class K_point(object):
 if __name__ == '__main__':
     KB = Knowledge_base()
     rst = KB.get_concept_word(0)
+    rst = KB.get_concept_upper_relations(0)
+    rst = KB.add_word('asasadadsa', 1)
     rst = KB.word_belong_to_concept("北京大学", 0)
     k_point = K_point('concept', {'concept_id': 2, 'properties': [5]})
     # k_point = K_point('concept', {'word': '南京', 'methods': [0]})
-    fact = Fact(1)
+    # fact = Fact(1)
     # k_point = K_point('fact', {'fact': fact})
     KB.merge([k_point])
     # print(facts)
     # print(rst)
-
