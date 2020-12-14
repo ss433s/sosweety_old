@@ -2,9 +2,7 @@ import os, sys
 import json
 import sqlite3
 sys.path.append("..")
-from kb import Knowledge_base
 
-KB = Knowledge_base()
 
 # 当前路径和项目root路径， 可以根据需求改变../..
 this_file_path = os.path.split(os.path.realpath(__file__))[0]
