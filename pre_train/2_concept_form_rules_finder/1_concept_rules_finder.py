@@ -27,7 +27,7 @@ rules_file_path = os.path.join(rules_dir, rules_file_name)
 rules_file = open(rules_file_path, 'w')
 rules_file_writer = csv.writer(rules_file)
 
-cutoff = 5
+cutoff = 10
 
 
 # rule提取函数，输入为sub concept list， father concept， rule file
@@ -109,7 +109,7 @@ def find_rules(concept1_list, concept2):
 ###################
 high_level_concept_id2word_dict = {}
 select_sql = "SELECT Concept2, Concept_tbl.Word FROM Concept_relation_tbl LEFT OUTER JOIN \
-                Concept_tbl ON Concept_relation_tbl.Concept2 = Concept_tbl.Concept_id LIMIT 1000000"
+                Concept_tbl ON Concept_relation_tbl.Concept2 = Concept_tbl.Concept_id"
 result = cur.execute(select_sql)
 count = 0
 for row in result:
@@ -119,10 +119,11 @@ for row in result:
     concept_id = row[0]
     high_level_concept_id2word_dict[row[0]] = row[1]
 
+print(len(high_level_concept_id2word_dict))
 count = 0
 for concept_id, word in high_level_concept_id2word_dict.items():
     count += 1
-    if count % 10 == 0:
+    if count % 1000 == 0:
         nowStr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         print('[%s] check %s relations' % (nowStr, count))
     sub_concept_words = set()

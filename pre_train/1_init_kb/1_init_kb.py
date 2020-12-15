@@ -37,7 +37,7 @@ db_dir = 'data/knowledgebase/'
 db_file = 'knowledgebase.db'
 db_dir = os.path.join(root_path_up, db_dir)
 if not os.path.exists(db_dir):
-    os.mkdir(db_dir)
+    os.makedirs(db_dir)
 new_db_path = os.path.join(db_dir, db_file)
 
 
