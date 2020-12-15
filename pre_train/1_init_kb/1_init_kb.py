@@ -33,8 +33,12 @@ root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
 
 # 数据库路径 诡异的bug 不能在vscode的目录里
 root_path_up = os.path.abspath(os.path.join(root_path, ".."))
-db_path = 'data/knowledgebase/knowledgebase.db'
-new_db_path = os.path.join(root_path_up, db_path)
+db_dir = 'data/knowledgebase/'
+db_file = 'knowledgebase.db'
+db_dir = os.path.join(root_path_up, db_dir)
+if not os.path.exists(db_dir):
+    os.mkdir(db_dir)
+new_db_path = os.path.join(db_dir, db_file)
 
 
 ###################
@@ -247,7 +251,7 @@ for spo_file in spo_files:
 
 
 # 遍历relation， 录入relation表
-# todo 去重
+relations = set()
 for kb_file in kb_files:
     kb_file_path = os.path.join(root_path, kb_prefix, kb_file)
     with open(kb_file_path) as kb_file_handler:
@@ -261,9 +265,12 @@ for kb_file in kb_files:
             if len(words) > 1:
                 concept_id1 = concept_words_dict[words[0]]
                 concept_id2 = concept_words_dict[words[1]]
-                insert_concept_sql = "INSERT INTO Concept_relation_tbl (Concept1, Concept2, Relation_type) \
-                    Values (?, ?, 0)"
-                cur.execute(insert_concept_sql, (concept_id1, concept_id2))
+                relation = str(concept_id1) + '|' + str(concept_id2)
+                if relation not in relations:
+                    relations.add(relation)
+                    insert_concept_sql = "INSERT INTO Concept_relation_tbl (Concept1, Concept2, Relation_type) \
+                        Values (?, ?, 0)"
+                    cur.execute(insert_concept_sql, (concept_id1, concept_id2))
 
             line = kb_file_handler.readline()
         kb_db_conn.commit()
