@@ -101,7 +101,7 @@ lines = unsolvable_ss_file.readlines()
 total_concept_phrase = []
 for i in range(len(lines)):
     if i % 3000 == 0:
-        print('parsed %s sentence, total ~170000' % i)
+        print('parsed %s sentence, total %s' % (i, len(lines)))
 
     line = lines[i].split('\t')
     parse_str = line[0]
@@ -138,9 +138,10 @@ with open('./init_data/all_concept_phrases') as f:
     df_dict['concept_phrase'] = total_concept_phrase
     df = pd.DataFrame(df_dict)
     df2 = df.concept_phrase.value_counts()
+    # df2.to_csv('./init_data/123stat.csv')
     df3_dict = {'label': df2.index, 'count': df2.values}
     df3 = pd.DataFrame(df3_dict)
     with open('./init_data/all_concept_phrases_stat', 'w') as result_file:
         for i in range(len(df3)):
             result_file.write(df3['label'][i] + '\t' + str(df3['count'][i]) + '\n')
-    # df2.to_csv('./init_data/123stat.csv')
+    

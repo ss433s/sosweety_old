@@ -7,32 +7,6 @@ from sParser import Word, Parse_result, check_special_phrase, stanford_simplify
 mode = 1
 file = './init_data/test'
 
-
-# 处理普通词性元组list
-if mode == 1:
-    with open(file) as parse_file:
-
-        lines = parse_file.readlines()
-
-        for i in range(len(lines)):
-            line = lines[i].strip()
-            pos_tags = json.loads(line)
-            pos_tags = stanford_simplify(pos_tags)
-
-            contents = []
-            for word_value, pos_tag in pos_tags:
-                word = Word(word_value, pos_tag)
-                contents.append(word)
-            parse_result = Parse_result(contents)
-
-            all_results = []
-            total_count = []
-            start_time = time.time()
-            check_special_phrase(parse_result, all_results, mode='init', start_time=start_time)
-
-            print(all_results)
-
-
 # 专门处理百度信息抽取预处理好的语料
 if mode == 2:
     with open(sys.argv[1]) as parse_file:
@@ -82,3 +56,27 @@ if mode == 2:
                         unsolved_file.write(json.dumps(sub_sentence, ensure_ascii=False) + '\n')
                     else:
                         parsed_ss += 1
+
+# 处理普通词性元组list
+if mode == 1:
+    with open(file) as parse_file:
+
+        lines = parse_file.readlines()
+
+        for i in range(len(lines)):
+            line = lines[i].strip()
+            pos_tags = json.loads(line)
+            pos_tags = stanford_simplify(pos_tags)
+
+            contents = []
+            for word_value, pos_tag in pos_tags:
+                word = Word(word_value, pos_tag)
+                contents.append(word)
+            parse_result = Parse_result(contents)
+
+            all_results = []
+            total_count = []
+            start_time = time.time()
+            check_special_phrase(parse_result, all_results, mode='init', start_time=start_time)
+
+            print(all_results)
