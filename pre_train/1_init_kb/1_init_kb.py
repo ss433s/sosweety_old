@@ -15,7 +15,7 @@ sys.path.append("..")
 # 关于数据太大的问题，可以尝试取交集
 # 或者只保留下一步需要用到的数据的方法
 #########################################
-spo_prefix = 'data/spo_and_pattern'
+spo_prefix = 'data/spo'
 spo_files = ['nsubj_pr_stat', 'dobj_pr_stat', 'amod_pr_stat']
 
 kb_prefix = 'data/kb_relations'

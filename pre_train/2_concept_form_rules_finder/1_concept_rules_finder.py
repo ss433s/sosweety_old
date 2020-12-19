@@ -18,7 +18,7 @@ print("Opened database successfully")
 cur = kb_db_conn.cursor()
 
 # 创建rules存储文件
-rules_dir = 'data/1_concept_rules'
+rules_dir = 'data/2_concept_rules'
 rules_file_name = 'rules'
 rules_dir = os.path.join(root_path, rules_dir)
 if not os.path.exists(rules_dir):
