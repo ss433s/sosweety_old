@@ -1,24 +1,27 @@
 import json
-import pandas as pd
-from sParser import Word, Parse_result, stanford_simplify, KB, phrase_patterns
+import os, sys
+# import sqlite3
+# import pandas as pd
+sys.path.append("..")
+sys.path.append("../..")
+from parser_class import Word, Parse_result
+from kb import Knowledge_base
+from utils.utils import stanford_simplify
 
 
-###################
-# 读取待处理文件
-# to do
-# 准备提供对外接口处理不同文件
-###################
-file = './init_data/parse_file_total'
-unsolvable_ss_file = open(file)
+# 当前路径和项目root路径， 可以根据需求改变../..
+this_file_path = os.path.split(os.path.realpath(__file__))[0]
+root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
 
-# 开始finder 定义参数
+# 打开语料文件
+file_path = 'data/corpus/baidu_ie_competition/parse_file_total'
+file_path = os.path.join(root_path, file_path)
+file = open(file_path)
+
+KB = Knowledge_base()
+
+# 阈值
 cutoff = 1000
-
-
-# phrase str提取
-phrase_strs = []
-for phrase_pattern in phrase_patterns:
-    phrase_strs.append(phrase_pattern.symbol)
 
 
 # parse result构建
@@ -29,20 +32,6 @@ def tuples2parse_result(tuples):
         content.append(tmp_word)
     parse_result = Parse_result(content)
     return parse_result
-
-
-# 查出某个词所有的潜在隶属于的concept
-# todo 目前仅限直属，可以考虑拓展
-def get_word_relations(word):
-    word_relations = []
-    word_ids = KB.get_word_ids(word)
-    for word_id in word_ids:
-        if word_id[1] == 'concept':
-            single_concept_relations = KB.get_concept_relations(word_id[0])
-            for single_concept_relation in single_concept_relations:
-                if single_concept_relation not in word_relations:
-                    word_relations.append(single_concept_relation)
-    return word_relations
 
 
 # 强行遍历各种可能性2-3个词
@@ -97,7 +86,26 @@ def checkout_concept_phrase(parse_result):
     return concept_phrases
 
 
-lines = unsolvable_ss_file.readlines()
+line = file.readline()
+noun_id_dict = {}
+count = 0
+while line:
+    count += 1
+    if count % 5000 == 0:
+        print('parsed %s sentence' % count)
+    line = line.strip().split('\t')
+    pos_tags = json.loads(line[1].strip())
+    pos_tags = stanford_simplify(pos_tags)
+    for word, pos_tag in pos_tags:
+        if pos_tag == 'NN':
+            concept_ids = KB.get_word_ids(word, 0)
+            for concept_id in concept_ids:
+                noun_id_dict[concept_id[0]] = 1
+
+    line = file.readline()
+
+print(len(noun_id_dict))
+
 total_concept_phrase = []
 for i in range(len(lines)):
     if i % 3000 == 0:
@@ -144,4 +152,3 @@ with open('./init_data/all_concept_phrases') as f:
     with open('./init_data/all_concept_phrases_stat', 'w') as result_file:
         for i in range(len(df3)):
             result_file.write(df3['label'][i] + '\t' + str(df3['count'][i]) + '\n')
-    

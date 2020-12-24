@@ -72,16 +72,27 @@ class Knowledge_base(object):
         else:
             return -1
 
+    # 查询一个词的所有对应id
+    # 参数为 word， word_type为可选，可以知道只查询指定类型的word对应的id
+    # 返回结果为【item_id, word_type】的list
+    def get_word_ids(self, word, word_type=None):
+
+        final_list = []
+        if word_type is not None:
+            select_sql = "SELECT Item_id FROM Word_tbl where Word=? and Type=?"
+            result = cur.execute(select_sql, (word, word_type)).fetchall()
+            for item in result:
+                final_list.append([item[0], word_type])
+        else:
+            select_sql = "SELECT Item_id, Type FROM Word_tbl where Word=?"
+            result = cur.execute(select_sql, [word]).fetchall()
+            for item in result:
+                final_list.append([item[0], item[1]])
+
+        return final_list
+
 
 '''
-    # 查询一个词的所有对应id
-    def get_word_ids(self, word):
-        try:
-            word_ids = word2id_dict[word]
-            return word_ids
-        except Exception:
-            return []
-
     # 判定一个词语是否属于某种concept，不递归，多义词返回concept_id
     def word_belong_to_concept(self, word, concept_id):
         result = []
@@ -129,7 +140,8 @@ if __name__ == '__main__':
     KB = Knowledge_base()
     rst = KB.get_concept_word(0)
     rst = KB.get_concept_upper_relations(0)
-    rst = KB.add_word('asasadadsa', 1)
+    # rst = KB.add_word('asasadadsa', 1)
+    rst = KB.get_word_ids('人口')
     rst = KB.word_belong_to_concept("北京大学", 0)
     k_point = K_point('concept', {'concept_id': 2, 'properties': [5]})
     # k_point = K_point('concept', {'word': '南京', 'methods': [0]})

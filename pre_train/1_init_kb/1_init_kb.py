@@ -76,7 +76,7 @@ create_fact_tbl_sql = '''CREATE TABLE Fact_tbl
 create_word_tbl_sql = '''CREATE TABLE Word_tbl
        (ID INTEGER PRIMARY KEY AUTOINCREMENT    NOT NULL,
        Word           TEXT    NOT NULL,
-       Item_id        TEXT    NOT NULL,
+       Item_id        INT    NOT NULL,
        Type     INT    NOT NULL,
        Frequece  INT    NOT NULL,
        Confidence REAL NOT NULL);'''
