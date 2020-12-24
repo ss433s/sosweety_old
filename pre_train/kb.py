@@ -32,14 +32,14 @@ class Knowledge_base(object):
 
     # 查询一个concept id 的上位concept
     # 仅限一度查询
+    # 返回上位id的list
     def get_concept_upper_relations(self, concept_id):
+        final_list = set()
         select_sql = "SELECT Concept2 FROM Concept_relation_tbl where Concept1=?"
         result = cur.execute(select_sql, [str(concept_id)]).fetchall()
-        if len(result) == 0:
-            return None
-        else:
-            upper_relations = result
-            return upper_relations
+        for item in result:
+            final_list.add(item[0])
+        return list(final_list)
 
     # 添加词
     #

@@ -41,6 +41,7 @@ baidu_ie_corpus_file = os.path.join(root_path, baidu_ie_corpus_file)
 
 # 导入上下位关系
 # todo 导入fact
+# todo 去重 内部去重和数据库查重都没做
 with open(baidu_ie_corpus_file) as train_file:
 
     line = train_file.readline()

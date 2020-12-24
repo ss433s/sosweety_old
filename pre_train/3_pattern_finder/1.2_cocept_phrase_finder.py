@@ -1,3 +1,7 @@
+##############
+# 第一步 找出所有在kb的NN
+##############
+
 import json
 import os, sys
 # import sqlite3
@@ -100,7 +104,8 @@ while line:
         if pos_tag == 'NN':
             concept_ids = KB.get_word_ids(word, 0)
             for concept_id in concept_ids:
-                noun_id_dict[concept_id[0]] = 1
+                if concept_id[0] not in noun_id_dict:
+                    noun_id_dict[concept_id[0]] = 1
 
     line = file.readline()
 
