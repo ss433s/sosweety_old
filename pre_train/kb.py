@@ -23,7 +23,7 @@ class Knowledge_base(object):
     # 查询concept word
     def get_concept_word(self, concept_id):
         select_sql = "SELECT Word FROM Concept_tbl where Concept_id=?"
-        result = cur.execute(select_sql, (str(concept_id))).fetchall()
+        result = cur.execute(select_sql, [str(concept_id)]).fetchall()
         if len(result) == 0:
             return None
         else:
