@@ -1,57 +1,10 @@
+import sys
 import json
 import time
-
-
-# parse result类
-class Parse_result(object):
-    def __init__(self, contents):
-        self.contents = contents
-        self.pos_tags = [i.pos_tag for i in self.contents]
-        self.words = [i.value for i in self.contents]
-        self.parse_str = "|".join(self.pos_tags)
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        s = ""
-        # s += "words: %s" % (self.words)
-        # s += ", pos_tags: %s" % (self.pos_tags)
-        s += "\"content: %s\"" % (self.contents)
-        return s
-
-
-# 单词类 value为字面， pos_tag为词性
-class Word(object):
-    def __init__(self, value, pos_tag, pos_tag2=None):
-        self.value = value
-        self.pos_tag = pos_tag
-        self.core_word = self.value
-        if pos_tag2:
-            self.pos_tag2 = pos_tag2
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        s = ""
-        s += "word: %s" % (self.value)
-        s += ", pos_tag: %s" % (self.pos_tag)
-        # s += ", parse_str: %s" % (self.parse_str)
-        return s
-
-
-def stanford_simplify(pos_tags):  # stanford 的postag 是列表，列表元素是（词，词性）的元组
-    stanford_simplify_dict = {}
-    with open('../data/datasets/stanford_simplify') as f:
-        lines = f.readlines()
-        for line in lines:
-            line = line.strip().split('\t')
-            stanford_simplify_dict[line[0]] = line[1]
-    result = []
-    for word, pos_tag in pos_tags:
-        result.append((word, stanford_simplify_dict[pos_tag]))
-    return result
+sys.path.append("..")
+sys.path.append("../..")
+from parser_class import Word, Parse_result
+from utils.utils import stanford_simplify
 
 
 ###################

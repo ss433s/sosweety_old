@@ -1,5 +1,5 @@
 ##############
-# 第一步 找出所有在kb的NN
+# 借助上两步结果遍历所有可能性
 ##############
 
 import json
@@ -33,7 +33,7 @@ with open(dict_file_path) as dict_file:
     for line in dict_file.readlines():
         line = line.strip().split('\t')
         upper_concepts = eval(line[1])
-        relation_dict[line[0]] = upper_concepts
+        relation_dict[int(line[0])] = upper_concepts
         for concept in upper_concepts:
             all_upper_concepts_set.add(concept)
 
@@ -100,34 +100,29 @@ def checkout_concept_phrase(pos_tags):
                     next_next_item_all_features = create_features_for_item(next_next_item)
                     for phrase in item_concept_phrases:
                         for feature3 in next_next_item_all_features:
-                            phrase3 = phrase.append(feature3)
+                            phrase3 = phrase + [feature3]
                             concept_phrases.append(phrase3)
     return concept_phrases
 
 
-# 找phrase
+# 找phrase, 同时写入文件
 lines = file.readlines()
-total_concept_phrase = []
-for i in range(len(lines)):
-    if i % 100 == 0:
-        print('parsed %s sentence, total %s' % (i, len(lines)))
-    if i == 100:
-        break
-    line = lines[i].split('\t')
-    parse_str = line[0]
-    pos_tags = json.loads(line[1].strip())
-    pos_tags = stanford_simplify(pos_tags)
-    total_concept_phrase += checkout_concept_phrase(pos_tags)
-
-
-# 写入文件
 concept_phrase_file_path = 'data/3_phrase_pattern/concept_phrases'
 concept_phrase_file_path = os.path.join(root_path, concept_phrase_file_path)
 with open(concept_phrase_file_path, 'w') as concept_phrase_file:
-    lines = concept_phrase_file.readlines()
-    for line in lines:
-        line = line.strip().split('\t')
-        word2id_dict[line[0]] = eval(line[1])
+    for i in range(len(lines)):
+        if i % 5000 == 0:
+            print('parsed %s sentence, total %s' % (i, len(lines)))
+        # if i == 1000:
+        #     break
+        line = lines[i].split('\t')
+        parse_str = line[0]
+        pos_tags = json.loads(line[1].strip())
+        pos_tags = stanford_simplify(pos_tags)
+        concept_phrases = checkout_concept_phrase(pos_tags)
+        for concept_phrase in concept_phrases:
+            concept_phrase_file.write((json.dumps(concept_phrase, ensure_ascii=False) + '\n'))
+
 
 '''
 # pandas排序去重，不能是json，直接读字符串就行, 写csv速度更快
