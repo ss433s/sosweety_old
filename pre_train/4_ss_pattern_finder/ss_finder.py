@@ -1,24 +1,32 @@
-import sys
+import os, sys
 import json
 import time
 sys.path.append("..")
 sys.path.append("../..")
 from sParser.parser_class import Word, Parse_result
+from sParser.sParser import find_single_phrase_pattern, phrase_patterns
 from utils.utils import stanford_simplify
 
 
-###################
-# 读取待处理文件
-# to do
-# 准备提供对外接口处理不同文件
-###################
-file = './init_data/parse_file_total'
-unsolvable_ss_file = open(file)
+# 当前路径和项目root路径， 可以根据需求改变../..
+this_file_path = os.path.split(os.path.realpath(__file__))[0]
+root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
 
-# 获取所有分句
+# 打开语料文件
+# 此处为预处理好的百度信息抽取比赛语料
+file_path = 'data/corpus/baidu_ie_competition/parse_file_total'
+file_path = os.path.join(root_path, file_path)
+file = open(file_path)
+
+ss_pattern_dir = 'data/4_ss_pattern'
+ss_pattern_dir = os.path.join(root_path, ss_pattern_dir)
+if not os.path.exists(ss_pattern_dir):
+    os.mkdir(ss_pattern_dir)
+ss_pattern_file_path = 'ss_patterns_raw'
+ss_pattern_file_path = os.path.join(ss_pattern_dir, ss_pattern_file_path)
+ss_pattern_file = open(ss_pattern_file_path, 'w')
 
 
-# 百度信息抽取预处理数据形式
 print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
 
 
@@ -31,12 +39,30 @@ def tuples2parse_result(tuples):
     return parse_result
 
 
-lines = unsolvable_ss_file.readlines()
-ss_parse_results = []
+def checkout_ss_pattern(parse_result):
+    no_more_phrase = True
+    for phrase_pattern in phrase_patterns:
+        results = find_single_phrase_pattern(parse_result, phrase_pattern)
+        if len(results) > 0:
+            no_more_phrase = False
+            # for new_parse_result in results:
+            # checkout_ss_pattern(results[0])
+    if no_more_phrase:
+        result_str = []
+        for item in parse_result.contents:
+            if isinstance(item, Word):
+                result_str.append(item.value)
+            else:
+                result_str.append(item.pos_tag)
+        ss_pattern_file.write('|'.join(result_str) + '\n')
+        return
+
+
+lines = file.readlines()
 for i in range(len(lines)):
-    if i % 10000 == 0:
+    if i % 1000 == 0:
         print('parsed %s sentence, total ~170000' % i)
-    if i > 10000:
+    if i > 1000:
         break
 
     line = lines[i].split('\t')
@@ -49,94 +75,11 @@ for i in range(len(lines)):
         pos_tag = pos_tags[i]
         if pos_tag[0] in ['。', '！', '？', '?', '，', ',', ';', '；']:
             ss_parse_result = tuples2parse_result(pos_tags[tmp_stamp: i])
-            ss_parse_results.append(ss_parse_result)
+            checkout_ss_pattern(ss_parse_result)
             tmp_stamp = i + 1
     if tmp_stamp < len(pos_tags):
         ss_parse_result = tuples2parse_result(pos_tags[tmp_stamp: len(pos_tags)])
-        ss_parse_results.append(ss_parse_result)
+        checkout_ss_pattern(ss_parse_result)
 
-# 开始finder 定义参数
-cutoff = 1000
-
-
-# for ss_parse_result in ss_parse_results:
-#     rst = check_out_entities(ss_parse_result, KB)
-
-
-###################
-# 找多词pattern
-###################
-# high_freq_word_file = open('./ss/pre_train/high_freq_word_file', 'w')
-# word_freq_dict = {}
-# high_freq_word_set = set()
-# # 分词遍历
-# for ss_parse_result in ss_parse_results:
-#     word_list = ss_parse_result.words
-#     pos_list = ss_parse_result.pos_tags
-#     for word in word_list:
-#         if word in word_freq_dict:
-#             word_freq_dict[word] += 1
-#         else:
-#             word_freq_dict[word] = 0
-#         if word_freq_dict[word] > cutoff:
-#             high_freq_word_set.add(word)
-# print(len(high_freq_word_set))
-
-# hf_co_dict = {}
-# for high_freq_word in high_freq_word_set:
-#     co_word_set = set()
-#     co_word_freq_dict = {}
-#     co_word_freq_dict[high_freq_word] = 0
-#     for ss_parse_result in ss_parse_results:
-#         word_list = ss_parse_result.words
-#         pos_list = ss_parse_result.pos_tags
-#         # 自身重复是否可以构成pattern
-#         if word_list.count(high_freq_word) > 1:
-#             co_word_freq_dict[high_freq_word] += 1
-#             if co_word_freq_dict[high_freq_word] > cutoff:
-#                 co_word_set.add(high_freq_word)
-#                 # print(word_list)
-#         if high_freq_word in word_list:
-#             for word in word_list:
-#                 if word != high_freq_word:
-
-#                     if word in co_word_freq_dict:
-#                         co_word_freq_dict[word] += 1
-#                     else:
-#                         co_word_freq_dict[word] = 0
-#                     if co_word_freq_dict[word] > cutoff:
-#                         co_word_set.add(word)
-#     if len(co_word_set) > 0:
-#         print(high_freq_word, co_word_set)
-#         hf_co_dict[high_freq_word] = list(co_word_set)
-
-hf_co_dict = {}
-hf_co_dict['（'] = ['）']
-potential_pattern_dict = {}
-for high_freq_word in hf_co_dict:
-    for co_word in hf_co_dict[high_freq_word]:
-        for ss_parse_result in ss_parse_results:
-            word_list = ss_parse_result.words
-            pos_list = ss_parse_result.pos_tags
-
-            if high_freq_word in word_list and co_word in word_list:
-                high_freq_word_index = word_list.index(high_freq_word)
-                co_word_index = word_list.index(co_word)
-                if co_word_index > high_freq_word_index:
-                    parse_str_list = [high_freq_word] + pos_list[high_freq_word_index+1:co_word_index] + [co_word]
-                    example_list = [high_freq_word] + word_list[high_freq_word_index+1:co_word_index] + [co_word]
-                    example = '|'.join(example_list)
-                    parse_str = '|'.join(parse_str_list)
-                    if parse_str in potential_pattern_dict:
-                        potential_pattern_dict[parse_str]['count'] += 1
-                        potential_pattern_dict[parse_str]['example'].append(example)
-                    else:
-                        potential_pattern = {}
-                        potential_pattern['count'] = 1
-                        potential_pattern['example'] = [example]
-                        potential_pattern_dict[parse_str] = potential_pattern
-
-with open('./init_data/potential_pattern', 'w') as potential_pattern_file:
-    for parse_str in potential_pattern_dict:
-        for example in potential_pattern_dict[parse_str]['example']:
-            potential_pattern_file.write(parse_str + '\t' + str(potential_pattern_dict[parse_str]['count']) + '\t' + example + '\n')
+ss_pattern_file.close()
+print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))

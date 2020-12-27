@@ -3,13 +3,19 @@ import re, argparse
 # import jieba
 # import jieba.posseg
 import time
-import ahocorasick
+# import ahocorasick
 from pyhanlp import HanLP
-import sys
+import os, sys
+this_file_path = os.path.split(os.path.realpath(__file__))[0]
+sys.path.append(this_file_path)
 sys.path.append("..")
 # from utils import tuple_in_tuple, find_all_sub_list
 from kb import Knowledge_base
-from parser_class import Parse_result, Word, Special_pattern, Special_phrase, Sub_sentence, Sub_sentence_pattern, Pre_sub_sentence
+from parser_class import Parse_result, Word, Phrase_pattern, Phrase, Sub_sentence, Sub_sentence_pattern, Pre_sub_sentence
+
+
+# 当前路径和项目root路径， 可以根据需求改变../..
+root_path = os.path.abspath(os.path.join(this_file_path, ".."))
 
 
 # ###########################各种函数######################
@@ -62,7 +68,7 @@ def seg2sub_sentence(sentence):
 # 构建所有可能的词组组合
 ###################
 # 先检测特殊短语
-def check_special_phrase(parse_result, final_results, mode='default', N=0, start_time=None):
+def check_phrase(parse_result, final_results, mode='default', N=0, start_time=None):
     # print('next')
     not_done = []
     final_results_str = [str(final_result) for final_result in final_results]
@@ -82,7 +88,7 @@ def check_special_phrase(parse_result, final_results, mode='default', N=0, start
         phrase_pattern = phrase_patterns[i]
         # if i % 10 == 0:
         #     print(i, N)
-        new_parse_results = find_single_special_pattern(parse_result, phrase_pattern)
+        new_parse_results = find_single_phrase_pattern(parse_result, phrase_pattern)
         not_done.append(len(new_parse_results) == 0)
         for new_parse_result in new_parse_results:
             matched_ss_pattern = check_ss_pattern(new_parse_result)
@@ -101,17 +107,17 @@ def check_special_phrase(parse_result, final_results, mode='default', N=0, start
                 break
             # if N < 5:
             if start_time is not None and time.time() - start_time < 60:
-                check_special_phrase(new_parse_result, final_results, mode, N + 1, start_time)
+                check_phrase(new_parse_result, final_results, mode, N + 1, start_time)
 
             # 不给start time就无限找下去
             if start_time is None:
-                check_special_phrase(new_parse_result, final_results, mode, N + 1, start_time)
+                check_phrase(new_parse_result, final_results, mode, N + 1, start_time)
     if all(not_done):
         return
 
 
-# 检测一个special phrase pattern 在一份parse result中的所有位置
-def find_single_special_pattern(parse_result, special_pattern):
+# 检测单个phrase pattern 在一份parse result中的所有位置
+def find_single_phrase_pattern(parse_result, phrase_pattern):
 
     def match_one_feature(parse_result_content, feature):
         result = False
@@ -134,7 +140,7 @@ def find_single_special_pattern(parse_result, special_pattern):
         return result
 
     new_parse_results = []
-    first_feature = special_pattern.features[0]
+    first_feature = phrase_pattern.features[0]
 
     # for j in range(len(parse_result.pos_tags) - len(special_pattern.features) + 1):
     #     if match_one_feature(parse_result.contents[j], first_feature):
@@ -158,11 +164,11 @@ def find_single_special_pattern(parse_result, special_pattern):
     # return new_parse_results
 
     # 目前限制很多，只识别*且*至少一个,且*前后必须有非*
-    for j in range(len(parse_result.pos_tags) - len(special_pattern.features) + 1):
+    for j in range(len(parse_result.pos_tags) - len(phrase_pattern.features) + 1):
         if match_one_feature(parse_result.contents[j], first_feature):
             # 确定是否包含特殊feature
             pattern_contain_special = False
-            for feature in special_pattern.features:
+            for feature in phrase_pattern.features:
                 if 'special_symbol' in feature:
                     pattern_contain_special = True
                     break
@@ -171,11 +177,11 @@ def find_single_special_pattern(parse_result, special_pattern):
             if pattern_contain_special:
                 full_match = False
                 i = 1
-                while len(parse_result.contents) > j + i and len(special_pattern.features) > i:
-                    current_feature = special_pattern.features[i]
+                while len(parse_result.contents) > j + i and len(phrase_pattern.features) > i:
+                    current_feature = phrase_pattern.features[i]
                     if match_one_feature(parse_result.contents[j + i], current_feature):
                         if 'special_symbol' in current_feature and current_feature['special_symbol'] == '*':
-                            next_feature = special_pattern.features[i+1]
+                            next_feature = phrase_pattern.features[i+1]
                             if match_one_feature(parse_result.contents[j + i + 1], next_feature):
                                 i += 2
                                 full_match = True
@@ -194,19 +200,19 @@ def find_single_special_pattern(parse_result, special_pattern):
             # 没有*
             else:
                 i = 1
-                while len(parse_result.contents) > j + i and len(special_pattern.features) > i:
-                    if match_one_feature(parse_result.contents[j + i], special_pattern.features[i]):
+                while len(parse_result.contents) > j + i and len(phrase_pattern.features) > i:
+                    if match_one_feature(parse_result.contents[j + i], phrase_pattern.features[i]):
                         i += 1
                         # continue
                     else:
                         break
-                full_match = i == len(special_pattern.features)
+                full_match = i == len(phrase_pattern.features)
 
             if full_match:
                 new_parse_result_contents = parse_result.contents[0:j]
                 contents = parse_result.contents[j: j + i]
-                special_phrase = Special_phrase(special_pattern, contents)
-                new_parse_result_contents.append(special_phrase)
+                phrase = Phrase(phrase_pattern, contents)
+                new_parse_result_contents.append(phrase)
                 if j + i < len(parse_result.contents):
                     new_parse_result_contents += parse_result.contents[j + i: len(parse_result.contents)]
                 new_parse_result = Parse_result(new_parse_result_contents)
@@ -253,24 +259,28 @@ def stanford_parse(text):
 ###################
 # 读取短语库和句式库
 ###################
-with open('../data/pattern/new_test_file2') as pattern_file:
+phrase_pattern_file_path = 'data/pattern/phrase_pattern'
+phrase_pattern_file_path = os.path.join(root_path, phrase_pattern_file_path)
+with open(phrase_pattern_file_path) as pattern_file:
     phrase_patterns = []
     lines = pattern_file.readlines()
-    del(lines[0])
     for line in lines:
-        line = line.strip().split('\t')
-        phrase_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7])
-        phrase_patterns.append(phrase_pattern)
+        if line[0] != '#':
+            line = line.strip().split('\t')
+            phrase_pattern = Phrase_pattern(line[0], line[1], line[2], line[3], line[4], line[5], line[6])
+            phrase_patterns.append(phrase_pattern)
 
-with open('../data/pattern/ss_pattern') as ss_file:
+ss_pattern_file_path = 'data/pattern/ss_pattern'
+ss_pattern_file_path = os.path.join(root_path, ss_pattern_file_path)
+with open(ss_pattern_file_path) as ss_file:
     ss_patterns = []
     lines = ss_file.readlines()
-    del(lines[0])
     for line in lines:
-        line = line.strip().split()
-        if len(line) > 1:
-            ss_pattern = Sub_sentence_pattern(line[0], line[1], line[2], line[3])
-            ss_patterns.append(ss_pattern)
+        if line[0] != '#':
+            line = line.strip().split()
+            if len(line) > 1:
+                ss_pattern = Sub_sentence_pattern(line[0], line[1], line[2], line[3])
+                ss_patterns.append(ss_pattern)
 
 
 KB = Knowledge_base()
@@ -315,23 +325,24 @@ class sParser(object):
                     sub_sentence.raw_parse_result = parse_result
 
                     all_results = []
-                    check_special_phrase(parse_result, all_results)
+                    check_phrase(parse_result, all_results)
 
                     # 返回所有results
                     if self.mode == 'default':
                         ss_result = all_results
+                        result['parse_results'].append(ss_result)
                     # 返回最高分result
-                    if self.mode == 'learning':
-                        final_result_score = 0
-                        ss_result = []
-                        for parse_result in all_results:
-                            score = cal_score(parse_result)
-                            if score > final_result_score:
-                                ss_result = parse_result
-                        if ss_result == []:
-                            result['parse_results'].append(sub_sentence)  # 无解析结果返回原始的 Pre_sub_sentence
-                        else:
-                            result['parse_results'].append(ss_result)  # 有解析结果返回Sub_sentence
+                    # if self.mode == 'learning':
+                    #     final_result_score = 0
+                    #     ss_result = []
+                    #     for parse_result in all_results:
+                    #         score = cal_score(parse_result)
+                    #         if score > final_result_score:
+                    #             ss_result = parse_result
+                    #     if ss_result == []:
+                    #         result['parse_results'].append(sub_sentence)  # 无解析结果返回原始的 Pre_sub_sentence
+                    #     else:
+                    #         result['parse_results'].append(ss_result)  # 有解析结果返回Sub_sentence
                 else:
                     result['parse_results'].append(sub_sentence)
 
@@ -352,8 +363,10 @@ if __name__ == '__main__':
 
     text = '北京（中国的首都）是北京。'
     text = '宝马和奔驰联合开发无人驾驶技术'
+    text = '北京是首都'
 
-    parser = sParser(KB, mode='learning')
+    # parser = sParser(KB, mode='learning')
+    parser = sParser(KB)
     rst = parser.parse(text)
     print(rst)
 

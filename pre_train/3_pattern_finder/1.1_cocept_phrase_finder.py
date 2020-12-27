@@ -47,8 +47,12 @@ file.close()
 
 print(len(noun_id_set))
 
-noun_file_path = 'data/3_phrase_pattern/nouns'
-noun_file_path = os.path.join(root_path, noun_file_path)
+noun_file_dir = 'data/3_phrase_pattern'
+noun_dir = os.path.join(root_path, noun_file_dir)
+if not os.path.exists(noun_file_dir):
+    os.mkdir(noun_file_dir)
+noun_file_name = 'nouns'
+noun_file_path = os.path.join(noun_file_dir, noun_file_name)
 with open(noun_file_path, 'w') as noun_file:
     for concept_id in noun_id_set:
         noun_file.write(str(concept_id) + '\n')

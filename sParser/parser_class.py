@@ -41,6 +41,69 @@ class Word(object):
 
 
 # Special pattern和Phrase类 特殊短语
+class Phrase_pattern(object):
+    def __init__(self, phrase_type, core_word_index, features, freq, meaning, symbol=None, examples=None):
+        self.phrase_type = phrase_type
+        self.pos_tag = self.phrase_type
+        self.core_word_index = core_word_index
+        self.features = json.loads(features)
+        self.freq = float(freq)
+        self.meaning = meaning
+        self.symbol = symbol
+        if examples:
+            self.examples = json.loads(examples)
+        else:
+            self.examples = None
+
+    def __str__(self):
+        return self.__repr__()
+
+    # def __setitem__(self, k, v):
+    #     self.k = v
+
+    def __repr__(self):
+        s = ""
+        s += "features: %s" % (self.features)
+        s += ", phrase_type: %s" % (self.phrase_type)
+        s += ", freq: %s" % (self.freq)
+        s += ", meaning: %s" % (self.meaning)
+        s += ", symbol: %s" % (self.symbol)
+        s += ", examples: %s" % (self.examples)
+        return s
+
+
+# Special pattern的实例，有具体的词语内容
+class Phrase(object):
+    def __init__(self, phrase_pattern, contents):
+        self.contents = contents
+        self.phrase_type = phrase_pattern.phrase_type
+        self.features = phrase_pattern.features
+        self.pos_tag = self.phrase_type
+        self.core_word_index = phrase_pattern.core_word_index
+        self.freq = phrase_pattern.freq
+        self.meaning = phrase_pattern.meaning
+        self.words = [content.value for content in self.contents]
+        self.value = "".join(self.words)
+        if self.core_word_index == '-':
+            self.core_word = self.value
+        else:
+            self.core_word = self.words[int(self.core_word_index)]
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        s = ""
+        # s += "words: %s" % (self.words)
+        s += "phrase_type: %s" % (self.phrase_type)
+        s += ", freq: %s" % (self.freq)
+        s += ", meaning: %s" % (self.meaning)
+        s += ", features: %s" % (self.features)
+        s += ", contents: %s" % (self.contents)
+        return s
+
+
+# Special pattern和Phrase类 特殊短语
 class Special_pattern(object):
     def __init__(self, phrase_type, pos_tag, core_word_index, features, freq, meaning, symbol=None, examples=None):
         self.phrase_type = phrase_type
