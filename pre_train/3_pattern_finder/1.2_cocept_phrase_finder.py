@@ -3,6 +3,7 @@
 ##############
 import os, sys
 sys.path.append("..")
+sys.path.append("../..")
 from kb import Knowledge_base
 
 KB = Knowledge_base()

@@ -6,7 +6,7 @@ import sqlite3
 
 # 当前路径和项目root路径， 可以根据需求改变../..
 this_file_path = os.path.split(os.path.realpath(__file__))[0]
-root_path = os.path.abspath(os.path.join(this_file_path, ".."))
+root_path = this_file_path
 
 # 数据库路径 诡异的bug 不能在vscode的目录里
 root_path_up = os.path.abspath(os.path.join(root_path, ".."))

@@ -1,14 +1,14 @@
 import re, argparse
 # import regex as re2
-import jieba
-import jieba.posseg
+# import jieba
+# import jieba.posseg
 import time
 import ahocorasick
 from pyhanlp import HanLP
 import sys
 sys.path.append("..")
 # from utils import tuple_in_tuple, find_all_sub_list
-from knowledgebase import Knowledge_base, concepts
+from kb import Knowledge_base
 from parser_class import Parse_result, Word, Special_pattern, Special_phrase, Sub_sentence, Sub_sentence_pattern, Pre_sub_sentence
 
 
@@ -16,7 +16,7 @@ from parser_class import Parse_result, Word, Special_pattern, Special_phrase, Su
 
 ###################
 # 分句
-# to do 引号破折号等，引号纠错
+# todo 引号破折号等，引号纠错
 ###################
 def seg2sentence(paragraph):
     sentences = re.split('(。|！|\!|\.|？|\?)', paragraph)
@@ -30,36 +30,21 @@ def seg2sentence(paragraph):
     return new_sents
 
 
-def cut_sent(para):
-    para = re.sub('([。！？\?])([^”’])', r"\1\n\2", para)  # 单字符断句符
-    para = re.sub('(\.{6})([^”’])', r"\1\n\2", para)  # 英文省略号
-    para = re.sub('(\…{2})([^”’])', r"\1\n\2", para)  # 中文省略号
-    para = re.sub('([。！？\?][”’])([^，。！？\?])', r'\1\n\2', para)
+def cut_sent(paragraph):
+    paragraph = re.sub('([。！？\?])([^”’])', r"\1\n\2", paragraph)  # 单字符断句符
+    paragraph = re.sub('(\.{6})([^”’])', r"\1\n\2", paragraph)  # 英文省略号
+    paragraph = re.sub('(\…{2})([^”’])', r"\1\n\2", paragraph)  # 中文省略号
+    paragraph = re.sub('([。！？\?][”’])([^，。！？\?])', r'\1\n\2', paragraph)
     # 如果双引号前有终止符，那么双引号才是句子的终点，把分句符\n放到双引号后，注意前面的几句都小心保留了双引号
-    para = para.rstrip()  # 段尾如果有多余的\n就去掉它
+    paragraph = paragraph.rstrip()  # 段尾如果有多余的\n就去掉它
     # 很多规则中会考虑分号;，但是这里我把它忽略不计，破折号、英文双引号等同样忽略，需要的再做些简单调整即可。
-    return para.split("\n")
+    return paragraph.split("\n")
 
 
 ###################
 # 拆分子句
-# to do 引号破折号等，引号纠错 小数点处理
+# todo 引号破折号等，引号纠错 小数点处理
 ###################
-'''
-带逗号的版本
-def seg2sub_sentence(sentence):
-    sub_sentences = re.split('(，|,|;|；)', sentence)
-    new_sub_sents = []
-    for i in range(int(len(sub_sentences) / 2) + 1):
-        if 2 * i + 1 < len(sub_sentences):
-            sub_sent = sub_sentences[2 * i] + sub_sentences[2 * i + 1]
-        else:
-            sub_sent = sub_sentences[2 * i]
-        new_sub_sents.append(sub_sent)
-    return new_sub_sents
-'''
-
-
 def seg2sub_sentence(sentence):
     sub_sentences = re.split('(，|,|;|；)', sentence)
     new_sub_sents = []
@@ -80,13 +65,14 @@ def seg2sub_sentence(sentence):
 def check_special_phrase(parse_result, final_results, mode='default', N=0, start_time=None):
     # print('next')
     not_done = []
-    # 自身就在ss_pattern中
     final_results_str = [str(final_result) for final_result in final_results]
 
+    # 自身就在ss_pattern中
     matched_ss_pattern = check_ss_pattern(parse_result)
     if len(matched_ss_pattern) > 0:
         for ss_pattern in matched_ss_pattern:
             ss = Sub_sentence(ss_pattern, parse_result.contents)
+            # todo 有可能有ss_str相同 但结构不同的情况出现
             if str(ss) not in final_results_str:
                 final_results.append(ss)
                 final_results_str.append(str(ss))
@@ -174,6 +160,7 @@ def find_single_special_pattern(parse_result, special_pattern):
     # 目前限制很多，只识别*且*至少一个,且*前后必须有非*
     for j in range(len(parse_result.pos_tags) - len(special_pattern.features) + 1):
         if match_one_feature(parse_result.contents[j], first_feature):
+            # 确定是否包含特殊feature
             pattern_contain_special = False
             for feature in special_pattern.features:
                 if 'special_symbol' in feature:
@@ -237,148 +224,11 @@ def check_ss_pattern(parse_result):
 
 
 ###################
-# 检测已知实体  其实是检测可以合并的实体 目前看0320
-# todo  到底有没有用？什么时候用 重分词再做？
-# 返回当前分词条件下可以组合出的实体合并后的全部parse_result
-# 与kb中的checkout_words 功能有重叠
-###################
-def check_known_concepts(parse_result):
-    # 构建所有实体的actree
-    actree = ahocorasick.Automaton()
-    for i in concepts:
-        concept = concepts[i]
-        word = concept.word
-        actree.add_word(word, word)
-    actree.make_automaton()
-
-    sentence = ''.join([item.value for item in parse_result.contents])
-    matched_concepts = actree.iter(sentence)
-
-    new_parse_results = []
-    for i in range(len(parse_result.contents)):
-        item = parse_result.contents[i]
-        for matched_concept in matched_concepts:
-            word = matched_concept[1]
-
-            # 组合后是否还是concept
-            if len(item.value) < len(word) and item.value == word[0:len(item.value)] and i+1 < len(parse_result.contents):
-                all_value = item.value
-                for j in range(i + 1, len(parse_result.contents)):
-                    next_item = parse_result.contents[i+j]
-                    all_value += next_item.value
-                    if all_value == word:
-                        new_parse_result_contents = parse_result.contents[0:i]
-                        concept_word = Word(word, 'NN')
-                        new_parse_result_contents.append(concept_word)
-                        if j + i + 1 < len(parse_result.contents):
-                            new_parse_result_contents += parse_result.contents[j + i + 1: len(parse_result.contents)]
-                        new_parse_result = Parse_result(new_parse_result_contents)
-                        new_parse_results.append(new_parse_result)
-                        break
-                    elif len(all_value) > len(word):
-                        break
-
-    return new_parse_results
-
-
-###################
-# 重分词
-# 检测已知实体
-# todo  重分词时识别所有潜在实体
-###################
-def check_known_concepts2(parse_result):
-    # 构建所有实体的actree
-    actree = ahocorasick.Automaton()
-    for i in concepts:
-        concept = concepts[i]
-        word = concept.word
-        actree.add_word(word, word)
-    actree.make_automaton()
-
-    sentence = ''.join([item.value for item in parse_result.contents])
-    matched_concepts = actree.iter(sentence)
-
-    return matched_concepts
-
-
-###################
-# 算分 以及 主谓宾计算
-###################
-
-# 读取主谓宾统计文件
-with open('../data/datasets/nsubj_pr_stat') as nsubj_file:
-    nsubj_dict = {}
-    lines = nsubj_file.readlines()
-    for line in lines:
-        line = line.strip().split('\t')
-        nsubj_dict[line[0]] = int(line[1])
-
-with open('../data/datasets/dobj_pr_stat') as dobj_file:
-    dobj_dict = {}
-    lines = dobj_file.readlines()
-    for line in lines:
-        line = line.strip().split('\t')
-        dobj_dict[line[0]] = int(line[1])
-
-with open('../data/datasets/amod_pr_stat') as amod_file:
-    amod_dict = {}
-    lines = amod_file.readlines()
-    for line in lines:
-        line = line.strip().split('\t')
-        amod_dict[line[0]] = int(line[1])
-
-
-def cal_score(structure, score=0):
-    score += structure.freq
-    for item in structure.contents:
-        if isinstance(item, Special_phrase):
-            score = cal_score(item, score)
-
-    # 主谓宾分数计算
-    if structure.meaning != '-':
-        relations = structure.meaning.split(',')
-        for relation in relations:
-            relation = relation.split(':')
-            if relation[0] == 'subj':
-                if relation[1] != '?' and relation[2] != '?':
-                    subj = structure.contents[int(relation[1])].core_word
-                    verb = structure.contents[int(relation[2])].core_word
-                    nsubj = subj + '|' + verb
-                    if nsubj in nsubj_dict:
-                        score = score * nsubj_dict[nsubj]
-            if relation[0] == 'dobj':
-                if relation[1] != '?' and relation[2] != '?':
-                    verb = structure.contents[int(relation[1])].core_word
-                    obj = structure.contents[int(relation[2])].core_word
-                    dobj = obj + '|' + verb
-                    if dobj in dobj_dict:
-                        score = score * dobj_dict[dobj]
-    return score
-
-
-###################
-# Parataxis
-###################
-def parataxis_finder():
-    return
-
-
-###################
-# extract k point
-###################
-def extract_kpoints(sub_sentence):
-    k_points = []
-    if sub_sentence.meaning != '-':
-        pass
-    return k_points
-
-
-###################
 # hanlp parse
 ###################
 def hanlp_parse(text):
     ha2stanford_dict = {}
-    with open('../data/datasets/ha2stanford') as f:
+    with open('../utils/ha2stanford') as f:
         lines = f.readlines()
         for line in lines:
             line = line.strip().split('\t')
@@ -394,35 +244,8 @@ def hanlp_parse(text):
 
 
 ###################
-# jieba parse
-###################
-def jieba_parse(text):
-    parse_result = jieba.posseg.cut(text)
-    words = []
-    pos_tags = []
-    for word, flag in parse_result:
-        words.append(word)
-        pos_tags.append(flag)
-    clean_text = "".join(words)
-    return words, pos_tags, clean_text
-
-
-###################
 # stanford parse
 ###################
-def stanford_simplify(pos_tags):  # stanford 的postag 是列表，列表元素是（词，词性）的元组
-    stanford_simplify_dict = {}
-    with open('../data/datasets/stanford_simplify') as f:
-        lines = f.readlines()
-        for line in lines:
-            line = line.strip().split('\t')
-            stanford_simplify_dict[line[0]] = line[1]
-    result = []
-    for word, pos_tag in pos_tags:
-        result.append((word, stanford_simplify_dict[pos_tag]))
-    return result
-
-
 def stanford_parse(text):
     return
 
@@ -430,17 +253,7 @@ def stanford_parse(text):
 ###################
 # 读取短语库和句式库
 ###################
-# old version
-# with open('../data/datasets/new_test_file') as pattern_file:
-#     phrase_patterns = []
-#     lines = pattern_file.readlines()
-#     del(lines[0])
-#     for line in lines:
-#         line = line.strip().split('\t')
-#         phrase_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4])
-#         phrase_patterns.append(phrase_pattern)
-
-with open('../data/datasets/new_test_file2') as pattern_file:
+with open('../data/pattern/new_test_file2') as pattern_file:
     phrase_patterns = []
     lines = pattern_file.readlines()
     del(lines[0])
@@ -449,7 +262,7 @@ with open('../data/datasets/new_test_file2') as pattern_file:
         phrase_pattern = Special_pattern(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7])
         phrase_patterns.append(phrase_pattern)
 
-with open('../data/datasets/ss_pattern') as ss_file:
+with open('../data/pattern/ss_pattern') as ss_file:
     ss_patterns = []
     lines = ss_file.readlines()
     del(lines[0])
@@ -529,7 +342,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-c",
                         "--corpus",
-                        default="./init_data/train.txt",
+                        default="../data/corpus/train.txt",
                         help="corpus file folder for training",
                         required=False)
     args = parser.parse_args()
