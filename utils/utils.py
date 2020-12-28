@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 
 this_file_path = os.path.split(os.path.realpath(__file__))[0]
 
@@ -46,3 +47,30 @@ def find_all_sub_list(short_list, long_list):
                 if full_match:
                     result.append(i)
     return result
+
+
+###################
+# 统计某文件制定列 只支持\t分割
+###################
+def count_value(input_file_path, ouput_file_path, column=0, cutoff=10):
+    count = 0
+    stat_dict = {}
+    with open(input_file_path) as input_file:
+        line = input_file.readline()
+        while line:
+            count += 1
+            if count % 500000 == 0:
+                print('count %s phrases' % count)
+            line = line.strip().split('\t')
+            item = line[column]
+            if item in stat_dict:
+                stat_dict[item] += 1
+            else:
+                stat_dict[item] = 1
+
+            line = input_file.readline()
+    df = pd.DataFrame.from_dict(stat_dict, orient='index', columns=['value'])
+    df2 = df.sort_values(by=['value'], ascending=False)
+    df3 = df2[df2['value'] > 10]
+    df3.to_csv(ouput_file_path)
+    return

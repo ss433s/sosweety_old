@@ -1,0 +1,14 @@
+# parse_str freq   type meaning
+NP	9034	s   -
+NP	9034	q   -
+NP|VP|NP	13198   s   subj:0:1,dobj:1:2
+JP	13166   s   amod:0:?
+NT|VP	12721   s   time:0:1
+NP|CD|M	1272   s   time:0:1
+NP|VP	1272   s   time:0:1
+VP	1272   s   time:0:1
+VP|NP	1272   s   time:0:1
+NP|VP	1272   s   time:0:1
+NP|VP	1272   q   time:0:1
+PP	1272   s   time:0:1
+NP|VP|CD|M	13198   s   subj:0:1,dobj:1:2

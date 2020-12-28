@@ -1,68 +1,21 @@
+import os, sys
 import json
 import time
+sys.path.append("..")
+sys.path.append("../..")
+from sParser.parser_class import Word, Parse_result
+from utils.utils import stanford_simplify
 
 
-# parse result类
-class Parse_result(object):
-    def __init__(self, contents):
-        self.contents = contents
-        self.pos_tags = [i.pos_tag for i in self.contents]
-        self.words = [i.value for i in self.contents]
-        self.parse_str = "|".join(self.pos_tags)
+# 当前路径和项目root路径， 可以根据需求改变../..
+this_file_path = os.path.split(os.path.realpath(__file__))[0]
+root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
 
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        s = ""
-        # s += "words: %s" % (self.words)
-        # s += ", pos_tags: %s" % (self.pos_tags)
-        s += "\"content: %s\"" % (self.contents)
-        return s
-
-
-# 单词类 value为字面， pos_tag为词性
-class Word(object):
-    def __init__(self, value, pos_tag, pos_tag2=None):
-        self.value = value
-        self.pos_tag = pos_tag
-        self.core_word = self.value
-        if pos_tag2:
-            self.pos_tag2 = pos_tag2
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        s = ""
-        s += "word: %s" % (self.value)
-        s += ", pos_tag: %s" % (self.pos_tag)
-        # s += ", parse_str: %s" % (self.parse_str)
-        return s
-
-
-def stanford_simplify(pos_tags):  # stanford 的postag 是列表，列表元素是（词，词性）的元组
-    stanford_simplify_dict = {}
-    with open('datasets/stanford_simplify') as f:
-        lines = f.readlines()
-        for line in lines:
-            line = line.strip().split('\t')
-            stanford_simplify_dict[line[0]] = line[1]
-    result = []
-    for word, pos_tag in pos_tags:
-        result.append((word, stanford_simplify_dict[pos_tag]))
-    return result
-
-
-###################
-# 读取待处理文件
-# to do
-# 准备提供对外接口处理不同文件
-###################
-file = './init_data/parse_file_total'
-unsolvable_ss_file = open(file)
-
-# 获取所有分句
+# 打开语料文件
+# 此处为预处理好的百度信息抽取比赛语料
+file_path = 'data/corpus/baidu_ie_competition/parse_file_total'
+file_path = os.path.join(root_path, file_path)
+file = open(file_path)
 
 
 # 百度信息抽取预处理数据形式
@@ -78,7 +31,7 @@ def tuples2parse_result(tuples):
     return parse_result
 
 
-lines = unsolvable_ss_file.readlines()
+lines = file.readlines()
 ss_parse_results = []
 for i in range(len(lines)):
     if i % 10000 == 0:
