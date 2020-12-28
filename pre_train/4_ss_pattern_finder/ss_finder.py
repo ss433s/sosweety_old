@@ -40,16 +40,21 @@ def tuples2parse_result(tuples):
 
 
 def checkout_ss_pattern(parse_result):
-    no_more_phrase = True
-    for phrase_pattern in phrase_patterns:
-        results = find_single_phrase_pattern(parse_result, phrase_pattern)
-        if len(results) > 0:
-            no_more_phrase = False
-            # for new_parse_result in results:
-            # checkout_ss_pattern(results[0])
+    no_more_phrase = False
+    new_parse_result = parse_result
+    while not no_more_phrase:
+        this_time_no_more_phrase = True
+        for phrase_pattern in phrase_patterns:
+            results = find_single_phrase_pattern(new_parse_result, phrase_pattern)
+            if len(results) > 0:
+                this_time_no_more_phrase = False
+                new_parse_result = results[0]
+                break
+        if this_time_no_more_phrase:
+            no_more_phrase = this_time_no_more_phrase
     if no_more_phrase:
         result_str = []
-        for item in parse_result.contents:
+        for item in new_parse_result.contents:
             if isinstance(item, Word):
                 result_str.append(item.value)
             else:
@@ -60,10 +65,10 @@ def checkout_ss_pattern(parse_result):
 
 lines = file.readlines()
 for i in range(len(lines)):
-    if i % 1000 == 0:
+    if i % 3000 == 0:
         print('parsed %s sentence, total ~170000' % i)
-    if i > 1000:
-        break
+    # if i > 1000:
+    #     break
 
     line = lines[i].split('\t')
     parse_str = line[0]

@@ -4,7 +4,7 @@ import re, argparse
 # import jieba.posseg
 import time
 # import ahocorasick
-from pyhanlp import HanLP
+# from pyhanlp import HanLP
 import os, sys
 this_file_path = os.path.split(os.path.realpath(__file__))[0]
 sys.path.append(this_file_path)
