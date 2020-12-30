@@ -67,7 +67,36 @@ def seg2sub_sentence(sentence):
 # 词组检测
 # 构建所有可能的词组组合
 ###################
-# 先检测特殊短语
+# 快速检测，直接递进到无phrase，不遍历所有可能组合
+def fast_check_parse_result(parse_result):
+    no_more_phrase = False
+    new_parse_result = parse_result
+    while not no_more_phrase:
+        this_time_no_more_phrase = True
+        for phrase_pattern in phrase_patterns:
+            results = find_single_phrase_pattern(new_parse_result, phrase_pattern)
+            if len(results) > 0:
+                this_time_no_more_phrase = False
+                new_parse_result = results[0]
+                break
+        if this_time_no_more_phrase:
+            no_more_phrase = this_time_no_more_phrase
+    if no_more_phrase:
+        return new_parse_result
+
+
+def fast_check_phrase(parse_result):
+    final_results = []
+    new_parse_result = fast_check_parse_result(parse_result)
+    matched_ss_pattern = check_ss_pattern(new_parse_result)
+    if len(matched_ss_pattern) > 0:
+        for ss_pattern in matched_ss_pattern:
+            ss = Sub_sentence(ss_pattern, parse_result.contents)
+            final_results.append(ss)
+    return final_results
+
+
+# 遍历所有可能组合，耗时过多
 def check_phrase(parse_result, final_results, mode='default', N=0, start_time=None):
     # print('next')
     not_done = []
@@ -259,7 +288,7 @@ def stanford_parse(text):
 ###################
 # 读取短语库和句式库
 ###################
-phrase_pattern_file_path = 'data/pattern/phrase_pattern'
+phrase_pattern_file_path = 'pattern/phrase_pattern'
 phrase_pattern_file_path = os.path.join(root_path, phrase_pattern_file_path)
 with open(phrase_pattern_file_path) as pattern_file:
     phrase_patterns = []
@@ -270,7 +299,7 @@ with open(phrase_pattern_file_path) as pattern_file:
             phrase_pattern = Phrase_pattern(line[0], line[1], line[2], line[3], line[4], line[5], line[6])
             phrase_patterns.append(phrase_pattern)
 
-ss_pattern_file_path = 'data/pattern/ss_pattern'
+ss_pattern_file_path = 'pattern/ss_pattern'
 ss_pattern_file_path = os.path.join(root_path, ss_pattern_file_path)
 with open(ss_pattern_file_path) as ss_file:
     ss_patterns = []
@@ -324,8 +353,12 @@ class sParser(object):
                     parse_result = hanlp_parse(sub_sentence.value)
                     sub_sentence.raw_parse_result = parse_result
 
-                    all_results = []
-                    check_phrase(parse_result, all_results)
+                    # # 遍历版
+                    # all_results = []
+                    # check_phrase(parse_result, all_results)
+
+                    # 快速版
+                    all_results = fast_check_phrase(parse_result)
 
                     # 返回所有results
                     if self.mode == 'default':

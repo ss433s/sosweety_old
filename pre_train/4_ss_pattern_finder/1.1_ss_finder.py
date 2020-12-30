@@ -4,7 +4,7 @@ import time
 sys.path.append("..")
 sys.path.append("../..")
 from sParser.parser_class import Word, Parse_result
-from sParser.sParser import find_single_phrase_pattern, phrase_patterns
+from sParser.sParser import fast_check_parse_result
 from utils.utils import stanford_simplify
 
 
@@ -22,7 +22,7 @@ ss_pattern_dir = 'data/4_ss_pattern'
 ss_pattern_dir = os.path.join(root_path, ss_pattern_dir)
 if not os.path.exists(ss_pattern_dir):
     os.mkdir(ss_pattern_dir)
-ss_pattern_file_path = 'ss_patterns_raw'
+ss_pattern_file_path = 'ss_patterns_raw2'
 ss_pattern_file_path = os.path.join(ss_pattern_dir, ss_pattern_file_path)
 ss_pattern_file = open(ss_pattern_file_path, 'w')
 
@@ -40,27 +40,15 @@ def tuples2parse_result(tuples):
 
 
 def checkout_ss_pattern(parse_result):
-    no_more_phrase = False
-    new_parse_result = parse_result
-    while not no_more_phrase:
-        this_time_no_more_phrase = True
-        for phrase_pattern in phrase_patterns:
-            results = find_single_phrase_pattern(new_parse_result, phrase_pattern)
-            if len(results) > 0:
-                this_time_no_more_phrase = False
-                new_parse_result = results[0]
-                break
-        if this_time_no_more_phrase:
-            no_more_phrase = this_time_no_more_phrase
-    if no_more_phrase:
-        result_str = []
-        for item in new_parse_result.contents:
-            if isinstance(item, Word):
-                result_str.append(item.value)
-            else:
-                result_str.append(item.pos_tag)
-        ss_pattern_file.write('|'.join(result_str) + '\n')
-        return
+    new_parse_result = fast_check_parse_result(parse_result)
+    result_str = []
+    for item in new_parse_result.contents:
+        if isinstance(item, Word):
+            result_str.append(item.value)
+        else:
+            result_str.append(item.pos_tag)
+    ss_pattern_file.write('|'.join(result_str) + '\n')
+    return
 
 
 lines = file.readlines()
