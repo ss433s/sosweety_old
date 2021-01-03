@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import json
 
 # from kb_class import Concept, Method, Fact
 
@@ -89,6 +90,18 @@ class Knowledge_base(object):
             for item in result:
                 final_list.append([item[0], item[1]])
 
+        return final_list
+
+    # 查询一个method的objects属性
+    # 参数为method_id
+    # 返回结果为【concept_id】的list
+    def get_method_objs(self, method_id):
+
+        final_list = []
+        select_sql = "SELECT Objects FROM Method_tbl where Method_id=?"
+        result = cur.execute(select_sql, [method_id]).fetchall()
+        if result[0][0] is not None:
+            final_list = json.loads(result[0])
         return final_list
 
 

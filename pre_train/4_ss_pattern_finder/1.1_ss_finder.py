@@ -22,7 +22,7 @@ ss_pattern_dir = 'data/4_ss_pattern'
 ss_pattern_dir = os.path.join(root_path, ss_pattern_dir)
 if not os.path.exists(ss_pattern_dir):
     os.mkdir(ss_pattern_dir)
-ss_pattern_file_path = 'ss_patterns_raw2'
+ss_pattern_file_path = 'ss_patterns_raw'
 ss_pattern_file_path = os.path.join(ss_pattern_dir, ss_pattern_file_path)
 ss_pattern_file = open(ss_pattern_file_path, 'w')
 

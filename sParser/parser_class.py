@@ -87,7 +87,11 @@ class Phrase(object):
         if self.core_word_index == '-':
             self.core_word = self.value
         else:
-            self.core_word = self.words[int(self.core_word_index)]
+            core_word_item = self.contents[int(self.core_word_index)]
+            if not isinstance(core_word_item, Word):
+                self.core_word = core_word_item.core_word
+            else:
+                self.core_word = core_word_item.value
 
     def __str__(self):
         return self.__repr__()
