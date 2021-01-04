@@ -26,3 +26,9 @@ for table in table_list:
     table_content = cur.execute(sql3)
     for line in table_content:
         print(line)
+
+print('--------some test------------')
+sql_test = 'select * from Word_tbl where Word="影响"'
+rst = cur.execute(sql_test)
+for row in rst:
+    print(row)

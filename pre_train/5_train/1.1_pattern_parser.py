@@ -73,5 +73,7 @@ while line:
             unsolved_file.write(json.dumps(sub_sentence, ensure_ascii=False) + '\t' + 'no_parse_result\n')
         else:
             logic_check_result = logic_check(all_results[0])
+            if len(logic_check_result) > 0 and all(logic_check_result):
+                print(all_results[0])
 
     line = file.readline()

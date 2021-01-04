@@ -101,7 +101,7 @@ class Knowledge_base(object):
         select_sql = "SELECT Objects FROM Method_tbl where Method_id=?"
         result = cur.execute(select_sql, [method_id]).fetchall()
         if result[0][0] is not None:
-            final_list = json.loads(result[0])
+            final_list = json.loads(result[0][0])
         return final_list
 
 

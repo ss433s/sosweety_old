@@ -91,7 +91,7 @@ def fast_check_phrase(parse_result):
     matched_ss_pattern = check_ss_pattern(new_parse_result)
     if len(matched_ss_pattern) > 0:
         for ss_pattern in matched_ss_pattern:
-            ss = Sub_sentence(ss_pattern, parse_result.contents)
+            ss = Sub_sentence(ss_pattern, new_parse_result.contents)
             final_results.append(ss)
     return final_results
 
@@ -262,27 +262,28 @@ def check_ss_pattern(parse_result):
 # 参数为一个sub_sentence
 # 返回结果是一个【Bool】的list，每一个值代表每一条meaning是否成立
 def logic_check(sub_sentence):
-    logic_rules = sub_sentence.meaning.split(',')
     logic_rules_check = []
-    for logic_rule in logic_rules:
-        this_rule_check = False
-        logic_rule = logic_rule.strip().split(':')
-        print(logic_rule)
-        index1 = int(logic_rule[1])
-        index2 = int(logic_rule[2])
-        if logic_rule[0] == 'dobj':
-            verb = sub_sentence.contents[index1].core_word
-            obj = sub_sentence.contents[index2].core_word
-            verb_methods = KB.get_word_ids(verb, 1)
-            verb_objs = []
-            for method_id, _ in verb_methods:
-                verb_objs += KB.get_method_objs(method_id)
-            obj_concepts = KB.get_word_ids(obj, 0)
-            for concept_id in obj_concepts:
-                if concept_id in verb_objs:
-                    this_rule_check = True
-                    break
-            logic_rules_check.append(this_rule_check)
+    if sub_sentence.meaning != '-' and sub_sentence.meaning is not None:
+        logic_rules = sub_sentence.meaning.split(',')
+        for logic_rule in logic_rules:
+            this_rule_check = False
+            logic_rule = logic_rule.strip().split(':')
+            # print(logic_rule)
+            index1 = int(logic_rule[1])
+            index2 = int(logic_rule[2])
+            if logic_rule[0] == 'dobj':
+                verb = sub_sentence.contents[index1].core_word
+                obj = sub_sentence.contents[index2].core_word
+                verb_methods = KB.get_word_ids(verb, 1)
+                verb_objs = []
+                for method_id, _ in verb_methods:
+                    verb_objs += KB.get_method_objs(method_id)
+                obj_concepts = KB.get_word_ids(obj, 0)
+                for concept_id, _ in obj_concepts:
+                    if concept_id in verb_objs:
+                        this_rule_check = True
+                        break
+                logic_rules_check.append(this_rule_check)
     return logic_rules_check
 
 

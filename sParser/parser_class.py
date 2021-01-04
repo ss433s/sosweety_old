@@ -203,7 +203,7 @@ class Sub_sentence(object):
 #             phrase_list = []
 #             for item in contents:
 #                 value_list.append(item.value)
-#                 if not isinstance(item, Word):
+#                 if not type(item).__name__ == 'Word':
 #                     has_phrase = True
 #                     phrase_list.append(item)
 #             print('     '.join(value_list))
@@ -222,7 +222,7 @@ class Sub_sentence(object):
 #             this_level_x = level_maxtrix[level]
 #             for i in range(len(contents)):
 #                 item = contents[i]
-#                 if not isinstance(item, Word):
+#                 if not type(item).__name__ == 'Word':
 #                     this_level_x[i] += len(contents)/2 - 0.5
 #                     if i < len(contents):
 #                         for j in range(i+1, len(contents)):
@@ -242,11 +242,11 @@ class Sub_sentence(object):
             next_level_content_list = []
             has_not_phrase_list = []
             for contents in contents_list:
-                contents_has_not_phrase = all([isinstance(item, Word) for item in contents])
+                contents_has_not_phrase = all([type(item).__name__ == 'Word' for item in contents])
                 has_not_phrase_list.append(contents_has_not_phrase)
                 this_level_value_list += [item.value for item in contents]
                 for item in contents:
-                    if not isinstance(item, Word):
+                    if not type(item).__name__ == 'Word':
                         next_level_content_list.append(item.contents)
             level_list.append(this_level_value_list)
             contents_list = next_level_content_list

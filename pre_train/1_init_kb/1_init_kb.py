@@ -235,7 +235,7 @@ for spo_file in spo_files:
                 obj_id = concept_words_dict[obj]
                 if method not in method_concept_dict:
                     method_concept_dict[method] = set()
-                method_concept_dict[method].add(concept_id)
+                method_concept_dict[method].add(obj_id)
                 line = spo_file_handler.readline()
 
             count = 0
