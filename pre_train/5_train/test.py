@@ -1,5 +1,5 @@
 import os, sys
-import json, time
+import json
 sys.path.append("..")
 sys.path.append("../..")
 from sParser.parser_class import Word, Parse_result
@@ -15,7 +15,8 @@ root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
 # 此处为预处理好的百度信息抽取比赛语料
 
 
-example = '[["作者", "NN"], ["受到", "VV"], ["0.01%", "NN"]]'
+example = '[["作者", "NN"], ["受到", "VV"], ["影响", "NN"]]'
+example = '[["集团", "NN"], ["下属", "VV"], ["31", "CD"], ["家", "M"], ["独资", "JJ"], ["子公司", "NN"]]'
 
 pos_tags = json.loads(example)
 pos_tags = stanford_simplify(pos_tags)

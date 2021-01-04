@@ -104,6 +104,18 @@ class Knowledge_base(object):
             final_list = json.loads(result[0][0])
         return final_list
 
+    # 查询一个method的objects属性
+    # 参数为method_id
+    # 返回结果为【concept_id】的list
+    def get_concept_methods(self, concept_id):
+
+        final_list = []
+        select_sql = "SELECT Methods FROM Concept_tbl where Concept_id=?"
+        result = cur.execute(select_sql, [concept_id]).fetchall()
+        if result[0][0] is not None:
+            final_list = json.loads(result[0][0])
+        return final_list
+
 
 '''
     # 判定一个词语是否属于某种concept，不递归，多义词返回concept_id

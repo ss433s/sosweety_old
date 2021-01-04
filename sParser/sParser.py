@@ -271,6 +271,9 @@ def logic_check(sub_sentence):
             # print(logic_rule)
             index1 = int(logic_rule[1])
             index2 = int(logic_rule[2])
+
+            # 不同rules分别判定
+            # dobj
             if logic_rule[0] == 'dobj':
                 verb = sub_sentence.contents[index1].core_word
                 obj = sub_sentence.contents[index2].core_word
@@ -281,6 +284,21 @@ def logic_check(sub_sentence):
                 obj_concepts = KB.get_word_ids(obj, 0)
                 for concept_id, _ in obj_concepts:
                     if concept_id in verb_objs:
+                        this_rule_check = True
+                        break
+                logic_rules_check.append(this_rule_check)
+
+            # subj
+            if logic_rule[0] == 'nsubj':
+                subj = sub_sentence.contents[index1].core_word
+                verb = sub_sentence.contents[index2].core_word
+                subj_concepts = KB.get_word_ids(subj, 0)
+                subj_methods = []
+                for concept_id, _ in subj_concepts:
+                    subj_methods += KB.get_concept_methods(concept_id)
+                verb_methods = KB.get_word_ids(verb, 1)
+                for method_id, _ in verb_methods:
+                    if method_id in subj_methods:
                         this_rule_check = True
                         break
                 logic_rules_check.append(this_rule_check)
