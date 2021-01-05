@@ -25,18 +25,23 @@ unsolved_file_path = 'unsolved_ss'
 unsolved_file_path = os.path.join(train_dir, unsolved_file_path)
 unsolved_file = open(unsolved_file_path, 'w')
 
+solved_file_path = 'solved_ss'
+solved_file_path = os.path.join(train_dir, solved_file_path)
+solved_file = open(solved_file_path, 'w')
 
 count = 0
+total_ss = 0
+parsed_ss = 0
+
 line = file.readline()
 while line:
-    count += 1
-    total_ss = 0
-    parsed_ss = 0
 
+    count += 1
     if count % 200 == 0:
         print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
         print('parsed %s sentence, total ~170000' % count)
         print('total ss is %s, parsed is %s' % (total_ss, parsed_ss))
+
     line = line.split('\t')
     pos_tags = json.loads(line[1].strip())
     pos_tags = stanford_simplify(pos_tags)
@@ -52,28 +57,28 @@ while line:
         ss.append(pos_tags[tmp_stamp: len(pos_tags)])
     # print(ss)
 
-    for sub_sentence in ss:
+    for sub_sentence_pos_tags in ss:
         total_ss += 1
 
         contents = []
-        for word_value, pos_tag in sub_sentence:
+        for word_value, pos_tag in sub_sentence_pos_tags:
             word = Word(word_value, pos_tag)
             contents.append(word)
         parse_result = Parse_result(contents)
-
-        # all_results = []
-        # total_count = []
-        # start_time = time.time()
-        # check_special_phrase(parse_result, all_results, mode='init', start_time=start_time)
-        # print(len(total_count))
-        # print(sum(total_count))
-        # print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
         all_results = fast_check_phrase(parse_result)
         if all_results == []:
-            unsolved_file.write(json.dumps(sub_sentence, ensure_ascii=False) + '\t' + 'no_parse_result\n')
+            unsolved_file.write(json.dumps(sub_sentence_pos_tags, ensure_ascii=False) + '\t' + 'no_parse_result\n')
         else:
             logic_check_result = logic_check(all_results[0])
-            if len(logic_check_result) > 0 and all(logic_check_result):
-                print(all_results[0])
+            # if len(logic_check_result) > 0 and all(logic_check_result):
+            if all(logic_check_result):
+                # print(all_results[0])
+                parsed_ss += 1
+                solved_file.write(json.dumps(sub_sentence_pos_tags, ensure_ascii=False) + '\n')
+            else:
+                unsolved_file.write(json.dumps(sub_sentence_pos_tags, ensure_ascii=False) + '\t' + 'logic_mistake\n')
 
     line = file.readline()
+
+solved_file.close()
+unsolved_file.close()
