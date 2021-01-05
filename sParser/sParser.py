@@ -353,7 +353,7 @@ with open(ss_pattern_file_path) as ss_file:
     lines = ss_file.readlines()
     for line in lines:
         if line[0] != '#':
-            line = line.strip().split()
+            line = line.strip().split('\t')
             if len(line) > 1:
                 ss_pattern = Sub_sentence_pattern(line[0], line[1], line[2], line[3])
                 ss_patterns.append(ss_pattern)

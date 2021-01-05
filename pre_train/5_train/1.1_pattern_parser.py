@@ -37,7 +37,7 @@ line = file.readline()
 while line:
 
     count += 1
-    if count % 200 == 0:
+    if count % 2000 == 0:
         print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
         print('parsed %s sentence, total ~170000' % count)
         print('total ss is %s, parsed is %s' % (total_ss, parsed_ss))
