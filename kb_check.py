@@ -28,7 +28,7 @@ for table in table_list:
         print(line)
 
 print('--------some test------------')
-sql_test = 'select * from Word_tbl where Word="影响"'
+sql_test = 'select * from Word_tbl where Word="地点"'
 rst = cur.execute(sql_test)
 for row in rst:
     print(row)

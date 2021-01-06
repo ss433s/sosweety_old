@@ -20,7 +20,7 @@ file = open(file_path)
 train_dir = 'data/5_train'
 train_dir = os.path.join(root_path, train_dir)
 if not os.path.exists(train_dir):
-    os.mkdir(train_dir)
+    os.makedirs(train_dir)
 unsolved_file_path = 'unsolved_ss'
 unsolved_file_path = os.path.join(train_dir, unsolved_file_path)
 unsolved_file = open(unsolved_file_path, 'w')

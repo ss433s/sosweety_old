@@ -21,7 +21,7 @@ cur = kb_db_conn.cursor()
 rules_dir = 'data/2_concept_rules'
 rules_dir = os.path.join(root_path, rules_dir)
 if not os.path.exists(rules_dir):
-    os.mkdir(rules_dir)
+    os.makedirs(rules_dir)
 rules_file_name = 'rules'
 rules_file_path = os.path.join(rules_dir, rules_file_name)
 rules_file = open(rules_file_path, 'w')
