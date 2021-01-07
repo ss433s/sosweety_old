@@ -28,7 +28,17 @@ for table in table_list:
         print(line)
 
 print('--------some test------------')
-sql_test = 'select * from Word_tbl where Word="地点"'
-rst = cur.execute(sql_test)
+word = '国家'
+sql_test = 'select Item_id from Word_tbl where Word=?'
+rst = cur.execute(sql_test, [word])
 for row in rst:
     print(row)
+
+print('--------concept downstream------------')
+word = '地点'
+select_sql = "SELECT Concept1, Concept_tbl.Word, Concept2 FROM Concept_relation_tbl LEFT OUTER JOIN \
+                    Concept_tbl ON Concept_relation_tbl.Concept1 = Concept_tbl.Concept_id where Concept2 in (select Item_id from Word_tbl where Word= ? and Type=0)"
+rst = cur.execute(select_sql, [word]).fetchall()
+# for row in rst:
+#     print(row)
+print(len(rst))

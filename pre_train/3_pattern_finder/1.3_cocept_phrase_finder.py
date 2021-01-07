@@ -58,6 +58,7 @@ for concept in all_upper_concepts_set:
 
 
 # 强行遍历各种可能性2-3个词
+# 返回是 【phrase， example】 phrase是feature的list， example是word的list
 def checkout_concept_phrase(pos_tags):
 
     def create_features_for_item(item):
@@ -90,7 +91,7 @@ def checkout_concept_phrase(pos_tags):
             # 交叉组合所有feature
             for feature1 in item_all_features:
                 for feature2 in next_item_all_features:
-                    item_concept_phrases.append([feature1, feature2])
+                    item_concept_phrases.append([[feature1, feature2], [item[0], next_item[0]]])
 
             concept_phrases += item_concept_phrases
 
@@ -98,10 +99,11 @@ def checkout_concept_phrase(pos_tags):
                 next_next_item = pos_tags[i+2]
                 if next_next_item[1] == 'NN':
                     next_next_item_all_features = create_features_for_item(next_next_item)
-                    for phrase in item_concept_phrases:
+                    for phrase, example in item_concept_phrases:
                         for feature3 in next_next_item_all_features:
                             phrase3 = phrase + [feature3]
-                            concept_phrases.append(phrase3)
+                            example3 = example + [next_next_item[0]]
+                            concept_phrases.append([phrase3, example3])
     return concept_phrases
 
 
@@ -120,8 +122,8 @@ with open(concept_phrase_file_path, 'w') as concept_phrase_file:
         pos_tags = json.loads(line[1].strip())
         pos_tags = stanford_simplify(pos_tags)
         concept_phrases = checkout_concept_phrase(pos_tags)
-        for concept_phrase in concept_phrases:
-            concept_phrase_file.write((json.dumps(concept_phrase, ensure_ascii=False) + '\n'))
+        for concept_phrase, phrase_example in concept_phrases:
+            concept_phrase_file.write((json.dumps(concept_phrase, ensure_ascii=False) + '\t' + json.dumps(phrase_example, ensure_ascii=False) + '\n'))
 
 
 '''

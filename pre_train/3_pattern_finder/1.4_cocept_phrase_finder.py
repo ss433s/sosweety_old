@@ -24,11 +24,12 @@ with open(concept_phrase_file_path) as concept_phrase_file:
         count += 1
         if count % 500000 == 0:
             print('count %s phrases' % count)
-        line = line.strip()
-        if line in concept_phrases:
-            concept_phrases[line] += 1
+        line = line.strip().split('\t')
+        concept_phrase = line[0]
+        if concept_phrase in concept_phrases:
+            concept_phrases[concept_phrase] += 1
         else:
-            concept_phrases[line] = 1
+            concept_phrases[concept_phrase] = 1
 
         line = concept_phrase_file.readline()
 
