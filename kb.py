@@ -116,21 +116,24 @@ class Knowledge_base(object):
             final_list = json.loads(result[0][0])
         return final_list
 
+    # 判定一个词语是否属于某种concept，不递归
+    # 返回为concept id的list
+    # todo 返回优化下
+    def word_belong_to_concept(self, word, concept_id):
+        final_list = []
+        concept_ids = self.get_word_ids(word, 0)
+        for word_concept_id, _ in concept_ids:
+            select_sql = "SELECT Concept2 FROM Concept_relation_tbl where Concept1=?"
+            result = cur.execute(select_sql, [word_concept_id]).fetchall()
+            upper_concepts = []
+            for item in result:
+                upper_concepts.append(item[0])
+            if concept_id in upper_concepts:
+                final_list.append(concept_id)
+        return final_list
+
 
 '''
-    # 判定一个词语是否属于某种concept，不递归，多义词返回concept_id
-    def word_belong_to_concept(self, word, concept_id):
-        result = []
-        if word in word2id_dict:
-            word_ids = word2id_dict[word]
-            for concept1_id, word1_type, freq, confidence in word_ids:
-                if word1_type == 'concept' and concept1_id in concept_relations:
-                    concept2s = concept_relations[concept1_id]
-                    for concept2_id, word2_type, _, _ in concept2s:
-                        if word2_type == 'concept' and concept2_id == concept_id:
-                            result.append([concept1_id, freq, confidence])
-        return result
-
     # 检查所有词表,返回一段文字的匹配词列表
     def checkout_words(self, text):
         word_set = set()
@@ -167,7 +170,7 @@ if __name__ == '__main__':
     rst = KB.get_concept_upper_relations(0)
     # rst = KB.add_word('asasadadsa', 1)
     rst = KB.get_word_ids('人口')
-    rst = KB.word_belong_to_concept("北京大学", 0)
+    rst = KB.word_belong_to_concept("广东", 210)
     k_point = K_point('concept', {'concept_id': 2, 'properties': [5]})
     # k_point = K_point('concept', {'word': '南京', 'methods': [0]})
     # fact = Fact(1)
