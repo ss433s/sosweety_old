@@ -34,11 +34,20 @@ rst = cur.execute(sql_test, [word])
 for row in rst:
     print(row)
 
-print('--------concept downstream------------')
-word = '地点'
+# print('--------concept downstream------------')
+# word = '地点'
+# select_sql = "SELECT Concept1, Concept_tbl.Word, Concept2 FROM Concept_relation_tbl LEFT OUTER JOIN \
+#                     Concept_tbl ON Concept_relation_tbl.Concept1 = Concept_tbl.Concept_id where Concept2 in (select Item_id from Word_tbl where Word= ? and Type=0)"
+# rst = cur.execute(select_sql, [word]).fetchall()
+# # for row in rst:
+# #     print(row)
+# print(len(rst))
+
+print('--------concept upstream------------')
+word = '武汉市'
 select_sql = "SELECT Concept1, Concept_tbl.Word, Concept2 FROM Concept_relation_tbl LEFT OUTER JOIN \
-                    Concept_tbl ON Concept_relation_tbl.Concept1 = Concept_tbl.Concept_id where Concept2 in (select Item_id from Word_tbl where Word= ? and Type=0)"
+                    Concept_tbl ON Concept_relation_tbl.Concept2 = Concept_tbl.Concept_id where Concept1 in (select Item_id from Word_tbl where Word= ? and Type=0)"
 rst = cur.execute(select_sql, [word]).fetchall()
-# for row in rst:
-#     print(row)
+for row in rst:
+    print(row)
 print(len(rst))
