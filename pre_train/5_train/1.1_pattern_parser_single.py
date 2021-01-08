@@ -2,22 +2,31 @@ import os, sys
 import json, time
 sys.path.append("..")
 sys.path.append("../..")
-# 当前路径和项目root路径， 可以根据需求改变../..
-this_file_path = os.path.split(os.path.realpath(__file__))[0]
-root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
-sys.path.append(root_path)
 from sParser.parser_class import Word, Parse_result
 from sParser.sParser import fast_check_phrase, logic_check
 from utils.utils import stanford_simplify
 
 
-# 打开语料文件
-file = open(sys.argv[1])
+# 当前路径和项目root路径， 可以根据需求改变../..
+this_file_path = os.path.split(os.path.realpath(__file__))[0]
+root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
 
-unsolved_file_path = sys.argv[1] + '_unsolved_ss'
+# 打开语料文件
+# 此处为预处理好的百度信息抽取比赛语料
+file_path = 'data/corpus/baidu_ie_competition/parse_file_total'
+file_path = os.path.join(root_path, file_path)
+file = open(file_path)
+
+train_dir = 'data/5_train'
+train_dir = os.path.join(root_path, train_dir)
+if not os.path.exists(train_dir):
+    os.makedirs(train_dir)
+unsolved_file_path = 'unsolved_ss'
+unsolved_file_path = os.path.join(train_dir, unsolved_file_path)
 unsolved_file = open(unsolved_file_path, 'w')
 
-solved_file_path = sys.argv[1] + '_solved_ss'
+solved_file_path = 'solved_ss'
+solved_file_path = os.path.join(train_dir, solved_file_path)
 solved_file = open(solved_file_path, 'w')
 
 count = 0
