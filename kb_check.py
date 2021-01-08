@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import time
 
 # 当前路径和项目root路径， 可以根据需求改变../..
 this_file_path = os.path.split(os.path.realpath(__file__))[0]
@@ -35,10 +36,22 @@ for row in rst:
     print(row)
 
 print('--------concept downstream------------')
-word = '地点'
+word = '社会'
 select_sql = "SELECT Concept1, Concept_tbl.Word, Concept2 FROM Concept_relation_tbl LEFT OUTER JOIN \
                     Concept_tbl ON Concept_relation_tbl.Concept1 = Concept_tbl.Concept_id where Concept2 in (select Item_id from Word_tbl where Word= ? and Type=0)"
 rst = cur.execute(select_sql, [word]).fetchall()
 # for row in rst:
 #     print(row)
 print(len(rst))
+
+# print('--------some test------------')
+# word = '国家'
+# sql_test = "select * from Word_tbl where substr(Word,1,3)='国家地'"
+# print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
+# for i in range(100):
+#     rst = cur.execute(sql_test)
+#     # break
+# print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
+# print(len(rst.fetchall()))
+# for row in rst:
+#     print(row)

@@ -21,6 +21,8 @@ spo_files = ['nsubj_pr_stat', 'dobj_pr_stat', 'amod_pr_stat']
 kb_prefix = 'data/kb_relations'
 kb_files = ['pedia_relation', 'pkubase', 'wiki_relation']
 
+exclude_list = ['语言', '社会', '面积', '字词', '地理', '自然',
+                '中国文学', '生活', '中场']
 # # test mode
 # spo_files = ['nsubj_test', 'dobj_test']
 # kb_files = ['sql_test']
