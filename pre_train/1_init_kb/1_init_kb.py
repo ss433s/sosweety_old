@@ -21,8 +21,6 @@ spo_files = ['nsubj_pr_stat', 'dobj_pr_stat', 'amod_pr_stat']
 kb_prefix = 'data/kb_relations'
 kb_files = ['pedia_relation', 'pkubase', 'wiki_relation']
 
-exclude_list = ['语言', '社会', '面积', '字词', '地理', '自然',
-                '中国文学', '生活', '中场']
 # # test mode
 # spo_files = ['nsubj_test', 'dobj_test']
 # kb_files = ['sql_test']
@@ -32,6 +30,14 @@ exclude_list = ['语言', '社会', '面积', '字词', '地理', '自然',
 this_file_path = os.path.split(os.path.realpath(__file__))[0]
 # 可以根据需求改变../..
 root_path = os.path.abspath(os.path.join(this_file_path, "../.."))
+
+exclude_file_name = 'exclude_list.txt'
+exclude_file_path = os.path.join(this_file_path, exclude_file_name)
+exclude_list = []
+with open(exclude_file_path) as exclude_file:
+    for line in exclude_file.readlines():
+        line = line.strip()
+        exclude_list.append(line)
 
 # 数据库路径 诡异的bug 不能在vscode的目录里
 root_path_up = os.path.abspath(os.path.join(root_path, ".."))
@@ -264,7 +270,7 @@ for kb_file in kb_files:
             if count % 1000000 == 0:
                 print('update %s relations' % count)
             words = line.strip().split('\t')
-            if len(words) > 1:
+            if len(words) > 1 and words[1] not in exclude_list:
                 concept_id1 = concept_words_dict[words[0]]
                 concept_id2 = concept_words_dict[words[1]]
                 relation = str(concept_id1) + '|' + str(concept_id2)
