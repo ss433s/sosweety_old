@@ -33,6 +33,46 @@ def stanford_simplify(pos_tags):
 
 
 ###################
+# 处理hanlp的分词结果，选择cpos_tag进行处理
+###################
+def hanlp_simplify(pos_tags):
+    hanlp_simplify_dict = {}
+    file_path = os.path.join(this_file_path, 'hanlp_simplify')
+    with open(file_path) as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.strip().split('\t')
+            hanlp_simplify_dict[line[0]] = line[1]
+    result = []
+    for word, pos_tag in pos_tags:
+        if pos_tag in hanlp_simplify_dict:
+            result.append((word, hanlp_simplify_dict[pos_tag]))
+        else:
+            result.append((word, 'OO'))
+    return result
+
+
+###################
+# 处理hanlp的分词结果，选择cpos_tag进行处理
+###################
+def jieba_simplify(pos_tags):
+    jieba_simplify_dict = {}
+    file_path = os.path.join(this_file_path, 'jieba_simplify')
+    with open(file_path) as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.strip().split('\t')
+            jieba_simplify_dict[line[0]] = line[1]
+    result = []
+    for word, pos_tag in pos_tags:
+        if pos_tag in jieba_simplify_dict:
+            result.append((word, jieba_simplify_dict[pos_tag]))
+        else:
+            result.append((word, 'OO'))
+    return result
+
+
+###################
 # 找子串
 ###################
 def find_all_sub_list(short_list, long_list):
