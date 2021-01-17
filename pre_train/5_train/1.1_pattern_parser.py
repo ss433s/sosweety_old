@@ -60,14 +60,22 @@ while line:
         if all_results == []:
             unsolved_file.write(json.dumps(sub_sentence_pos_tags, ensure_ascii=False) + '\t' + 'no_parse_result\n')
         else:
-            logic_check_result = logic_check(all_results[0])
-            # if len(logic_check_result) > 0 and all(logic_check_result):
-            if all(logic_check_result):
-                # print(all_results[0])
-                parsed_ss += 1
-                solved_file.write(json.dumps(sub_sentence_pos_tags, ensure_ascii=False) + '\n')
-            else:
-                unsolved_file.write(json.dumps(sub_sentence_pos_tags, ensure_ascii=False) + '\t' + 'logic_mistake\n')
+            # ##################
+            # # with logic check
+            # ##################
+            # logic_check_result = logic_check(all_results[0])
+            # # if len(logic_check_result) > 0 and all(logic_check_result):
+            # if all(logic_check_result):
+            #     # print(all_results[0])
+            #     parsed_ss += 1
+            #     solved_file.write(json.dumps(sub_sentence_pos_tags, ensure_ascii=False) + '\n')
+            # else:
+            #     unsolved_file.write(json.dumps(sub_sentence_pos_tags, ensure_ascii=False) + '\t' + 'logic_mistake\n')
+
+            ##################
+            # without logic check
+            ##################
+            solved_file.write(json.dumps(sub_sentence_pos_tags, ensure_ascii=False) + '\n')
 
     line = file.readline()
 
