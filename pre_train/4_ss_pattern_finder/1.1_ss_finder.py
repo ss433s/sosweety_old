@@ -47,7 +47,7 @@ def checkout_ss_pattern(parse_result):
             result_str.append(item.value)
         else:
             result_str.append(item.pos_tag)
-    ss_pattern_file.write('|'.join(result_str) + '\n')
+    ss_pattern_file.write('|'.join(result_str) + '\t' + '|'.join(parse_result.words) + '\n')
     return
 
 

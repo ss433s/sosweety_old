@@ -111,6 +111,58 @@ def count_value(input_file_path, ouput_file_path, column=0, cutoff=10):
             line = input_file.readline()
     df = pd.DataFrame.from_dict(stat_dict, orient='index', columns=['value'])
     df2 = df.sort_values(by=['value'], ascending=False)
-    df3 = df2[df2['value'] > 10]
+    df3 = df2[df2['value'] > cutoff]
     df3.to_csv(ouput_file_path)
+    return
+
+
+def count_value_with_examples(input_file_path, ouput_file_path, column=0, example_column=1, cutoff=10):
+    count = 0
+    stat_dict = {}
+    with open(input_file_path) as input_file:
+        line = input_file.readline()
+        while line:
+            count += 1
+            if count % 500000 == 0:
+                print('count %s lines' % count)
+            line = line.strip().split('\t')
+            item = line[column]
+            if item != '':
+                if item in stat_dict:
+                    stat_dict[item] += 1
+                else:
+                    stat_dict[item] = 1
+            line = input_file.readline()
+
+    # cutoff
+    cutoff_stat_dict = {}
+    for key, value in stat_dict.items():
+        if value > cutoff:
+            cutoff_stat_dict[key] = value
+    del stat_dict
+
+    # 多过一次，节省内存
+    key_example_dict = {}
+    with open(input_file_path) as input_file:
+        line = input_file.readline()
+        while line:
+            count += 1
+            if count % 500000 == 0:
+                print('count %s lines' % count)
+            line = line.strip().split('\t')
+            if len(line) > 1:
+                item = line[column]
+                if item in cutoff_stat_dict:
+                    example = line[example_column]
+                    if item not in key_example_dict:
+                        key_example_dict[item] = set([example])
+                    elif len(key_example_dict[item]) < 5:
+                        key_example_dict[item].add(example)
+            line = input_file.readline()
+
+    d_order = sorted(cutoff_stat_dict.items(), key=lambda x: x[1], reverse=True)
+    with open(ouput_file_path, 'w') as ordered_stat_file:
+        for key, value in d_order:
+            ordered_stat_file.write(key + '\t' + str(value) + '\t' + str(list(key_example_dict[key])) + '\n')
+
     return
