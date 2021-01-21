@@ -6,6 +6,7 @@ import time
 # import ahocorasick
 # from pyhanlp import HanLP
 import os, sys
+import pandas as pd
 this_file_path = os.path.split(os.path.realpath(__file__))[0]
 sys.path.append(this_file_path)
 sys.path.append("..")
@@ -335,28 +336,34 @@ def stanford_parse(text):
 ###################
 # 读取短语库和句式库
 ###################
-phrase_pattern_file_path = 'pattern/phrase_pattern'
+phrase_pattern_file_path = 'pattern/phrase_pattern.csv'
 phrase_pattern_file_path = os.path.join(root_path, phrase_pattern_file_path)
-with open(phrase_pattern_file_path) as pattern_file:
-    phrase_patterns = []
-    lines = pattern_file.readlines()
-    for line in lines:
-        if line[0] != '#':
-            line = line.strip().split('\t')
-            phrase_pattern = Phrase_pattern(line[0], line[1], line[2], line[3], line[4], line[5], line[6])
-            phrase_patterns.append(phrase_pattern)
+phrase_df = pd.read_csv(phrase_pattern_file_path)
 
-ss_pattern_file_path = 'pattern/ss_pattern'
+phrase_patterns = []
+for i in range(len(phrase_df)):
+    pos_tag = phrase_df['pos_tag'][i]
+    core_word_index = phrase_df['core_word_index'][i]
+    features = phrase_df['features'][i]
+    freq = phrase_df['freq'][i]
+    meaning = phrase_df['meaning'][i]
+    symbol = phrase_df['symbol'][i]
+    examples = phrase_df['examples'][i]
+    phrase_pattern = Phrase_pattern(pos_tag, core_word_index, features, freq, meaning, symbol, examples)
+    phrase_patterns.append(phrase_pattern)
+
+ss_pattern_file_path = 'pattern/ss_pattern.csv'
 ss_pattern_file_path = os.path.join(root_path, ss_pattern_file_path)
-with open(ss_pattern_file_path) as ss_file:
-    ss_patterns = []
-    lines = ss_file.readlines()
-    for line in lines:
-        if line[0] != '#':
-            line = line.strip().split('\t')
-            if len(line) > 1:
-                ss_pattern = Sub_sentence_pattern(line[0], line[1], line[2], line[3])
-                ss_patterns.append(ss_pattern)
+ss_df = pd.read_csv(ss_pattern_file_path)
+
+ss_patterns = []
+for i in range(len(ss_df)):
+    parse_str = ss_df['parse_str'][i]
+    freq = ss_df['freq'][i]
+    ss_type = ss_df['ss_type'][i]
+    meaning = ss_df['meaning'][i]
+    ss_pattern = Sub_sentence_pattern(parse_str, freq, ss_type, meaning)
+    ss_patterns.append(ss_pattern)
 
 
 KB = Knowledge_base()

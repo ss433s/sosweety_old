@@ -1,4 +1,4 @@
-# parse_str freq	type meaning
+# parse_str freq	ss_type meaning
 NN	9034	s	-
 NN	9034	q	-
 NN|VV|NN	5088	s	nsubj:0:1,dobj:1:2
