@@ -18,9 +18,44 @@ from parser_class import Parse_result, Word, Phrase_pattern, Phrase, Sub_sentenc
 # 当前路径和项目root路径， 可以根据需求改变../..
 root_path = os.path.abspath(os.path.join(this_file_path, ".."))
 
+# 初始化知识库
+KB = Knowledge_base()
+
+
+###################
+# 读取短语库和句式库
+###################
+phrase_pattern_file_path = 'pattern/phrase_pattern.csv'
+phrase_pattern_file_path = os.path.join(root_path, phrase_pattern_file_path)
+phrase_df = pd.read_csv(phrase_pattern_file_path)
+
+phrase_patterns = []
+for i in range(len(phrase_df)):
+    pos_tag = phrase_df['pos_tag'][i]
+    core_word_index = phrase_df['core_word_index'][i]
+    features = phrase_df['features'][i]
+    freq = phrase_df['freq'][i]
+    meaning = phrase_df['meaning'][i]
+    symbol = phrase_df['symbol'][i]
+    examples = phrase_df['examples'][i]
+    phrase_pattern = Phrase_pattern(pos_tag, core_word_index, features, freq, meaning, symbol, examples)
+    phrase_patterns.append(phrase_pattern)
+
+ss_pattern_file_path = 'pattern/ss_pattern.csv'
+ss_pattern_file_path = os.path.join(root_path, ss_pattern_file_path)
+ss_df = pd.read_csv(ss_pattern_file_path)
+
+ss_patterns = []
+for i in range(len(ss_df)):
+    parse_str = ss_df['parse_str'][i]
+    freq = ss_df['freq'][i]
+    ss_type = ss_df['ss_type'][i]
+    meaning = ss_df['meaning'][i]
+    ss_pattern = Sub_sentence_pattern(parse_str, freq, ss_type, meaning)
+    ss_patterns.append(ss_pattern)
+
 
 # ###########################各种函数######################
-
 ###################
 # 分句
 # todo 引号破折号等，引号纠错
@@ -306,6 +341,36 @@ def logic_check(sub_sentence):
     return logic_rules_check
 
 
+# 检测是否存在已知实体，有的话，替换为普通NN
+def known_entity_check(parse_result):
+    new_parse_results = []
+    for i in range(len(parse_result.contents)):
+        max_length = 0
+        this_item = parse_result.contents[i]
+        word = this_item.value
+        word_id = KB.get_word_ids(word, 0)
+        if len(word_id) != 0:
+            max_length = 1
+            final_word = word
+        new_word = word
+        for j in range(4):
+            if i+j+1 < len(parse_result.contents):
+                new_word = new_word + parse_result.contents[i+j+1].value
+                word_id = KB.get_word_ids(new_word, 0)
+                if len(word_id) != 0:
+                    max_length = j+2
+                    final_word = new_word
+        if max_length > 1:
+            new_parse_result_contents = parse_result.contents[0:i]
+            concept_word = Word(final_word, 'NN')
+            new_parse_result_contents.append(concept_word)
+            if max_length+i < len(parse_result.contents):
+                new_parse_result_contents += parse_result.contents[max_length+i: len(parse_result.contents)]
+            new_parse_result = Parse_result(new_parse_result_contents)
+            new_parse_results.append(new_parse_result)
+    return new_parse_results
+
+
 ###################
 # hanlp parse
 ###################
@@ -331,42 +396,6 @@ def hanlp_parse(text):
 ###################
 def stanford_parse(text):
     return
-
-
-###################
-# 读取短语库和句式库
-###################
-phrase_pattern_file_path = 'pattern/phrase_pattern.csv'
-phrase_pattern_file_path = os.path.join(root_path, phrase_pattern_file_path)
-phrase_df = pd.read_csv(phrase_pattern_file_path)
-
-phrase_patterns = []
-for i in range(len(phrase_df)):
-    pos_tag = phrase_df['pos_tag'][i]
-    core_word_index = phrase_df['core_word_index'][i]
-    features = phrase_df['features'][i]
-    freq = phrase_df['freq'][i]
-    meaning = phrase_df['meaning'][i]
-    symbol = phrase_df['symbol'][i]
-    examples = phrase_df['examples'][i]
-    phrase_pattern = Phrase_pattern(pos_tag, core_word_index, features, freq, meaning, symbol, examples)
-    phrase_patterns.append(phrase_pattern)
-
-ss_pattern_file_path = 'pattern/ss_pattern.csv'
-ss_pattern_file_path = os.path.join(root_path, ss_pattern_file_path)
-ss_df = pd.read_csv(ss_pattern_file_path)
-
-ss_patterns = []
-for i in range(len(ss_df)):
-    parse_str = ss_df['parse_str'][i]
-    freq = ss_df['freq'][i]
-    ss_type = ss_df['ss_type'][i]
-    meaning = ss_df['meaning'][i]
-    ss_pattern = Sub_sentence_pattern(parse_str, freq, ss_type, meaning)
-    ss_patterns.append(ss_pattern)
-
-
-KB = Knowledge_base()
 
 
 ###################
