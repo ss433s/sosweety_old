@@ -1,10 +1,20 @@
 import os, sys
 import json
 
-# 当前路径和项目root路径， 可以根据需求改变../..
+# 获取当前路径， 通过anchor文件获取项目root路径
 this_file_path = os.path.split(os.path.realpath(__file__))[0]
-root_path = this_file_path
-
+this_path = this_file_path
+while this_path:
+    if os.path.exists(os.path.join(this_path, 'sosweety_root_anchor.py')):
+        root_path = this_path
+        break
+    par_path = os.path.dirname(this_path)
+    print(par_path)
+    if par_path == this_path:
+        root_path = this_file_path
+        break
+    else:
+        this_path = par_path
 sys.path.append(root_path)
 from sParser.parser_class import Word, Parse_result
 from sParser.sParser import fast_check_phrase, logic_check, known_entity_check
